@@ -1,0 +1,3317 @@
+﻿<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Vehicle Colors Tool</title>
+    <link rel="stylesheet" href="resources/css/all.min.css" />
+
+    <style>
+      @import url("resources/css/google-fonts.css");
+      :root {
+        --font-primary:
+          "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          sans-serif;
+        --font-heading:
+          "Montserrat", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          sans-serif;
+        --primary: #1668dc;
+        --accent: #1677ff;
+        --secondary: #f59e0b;
+        --gradient-light:
+          radial-gradient(
+            at 0% 0%,
+            rgba(148, 163, 255, 0.4) 0px,
+            transparent 50%
+          ),
+          radial-gradient(
+            at 100% 0%,
+            rgba(255, 204, 128, 0.4) 0px,
+            transparent 50%
+          ),
+          radial-gradient(
+            at 100% 100%,
+            rgba(128, 237, 215, 0.4) 0px,
+            transparent 50%
+          ),
+          radial-gradient(
+            at 0% 100%,
+            rgba(255, 175, 189, 0.4) 0px,
+            transparent 50%
+          );
+        --gradient-dark: radial-gradient(
+          at 25% 20%,
+          rgb(18, 20, 36) 0%,
+          rgb(8, 8, 12) 60%
+        );
+        --grid-pattern:
+          linear-gradient(rgba(15, 23, 42, 0.1) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(15, 23, 42, 0.1) 1px, transparent 1px);
+        --grid-pattern-dark:
+          linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+        --background: var(--gradient-light);
+        --card-bg-light: rgba(255, 255, 255, 0.85);
+        --card-bg-light-opaque: rgba(255, 255, 255, 0.85);
+        --card-bg-dark: rgba(20, 22, 28, 0.85);
+        --card-border-light: rgba(0, 0, 0, 0.1);
+        --card-border-dark: rgba(255, 255, 255, 0.12);
+        --card-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+        --text-light: #111827;
+        --text-dark: rgba(255, 255, 255, 0.85);
+        --text-muted-light: #6b7280;
+        --text-muted-dark: rgba(255, 255, 255, 0.65);
+        --text-mute-ld: rgba(255, 255, 255, 0.45);
+        --success: #49aa19;
+        --error: #dc4446;
+        --anim-fast: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        --anim-med: 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        --anim-slow: 0.75s cubic-bezier(0.4, 0, 0.2, 1);
+        --scrollbar-bg: rgba(0, 0, 0, 0.1);
+        --scrollbar-thumb: #9ca3af;
+      }
+      .color-row .reset-btn,
+      .color-set,
+      .file-input-wrapper,
+      .floating-card,
+      .max-size-btn:not(:disabled),
+      .sync-btn:not(:disabled),
+      button:not(:disabled),
+      select:not(:disabled) {
+        transition: all var(--anim-fast);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+      }
+      .color-row .reset-btn:hover,
+      .color-set:hover,
+      .file-input-wrapper:hover,
+      .floating-card:hover,
+      .max-size-btn:not(:disabled):hover,
+      .sync-btn:not(:disabled):hover,
+      button:not(:disabled):hover,
+      select:not(:disabled):hover {
+        transform: translateY(-2px);
+      }
+      .custom-scrollbar {
+        scrollbar-width: thin;
+        scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-bg);
+      }
+      .custom-scrollbar::-webkit-scrollbar {
+        width: 8px;
+      }
+      .custom-scrollbar::-webkit-scrollbar-track {
+        background: var(--scrollbar-bg);
+      }
+      .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: var(--scrollbar-thumb);
+        border-radius: 4px;
+      }
+      .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+        background: var(--accent);
+      }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        min-height: 100vh;
+        font-family: var(--font-primary);
+        --background: var(--gradient-light);
+        --card-bg: var(--card-bg-light);
+        --card-border: var(--card-border-light);
+        --text: var(--text-light);
+        --text-muted: var(--text-muted-light);
+        --text-mute: var(--text-muted-light);
+        --scrollbar-bg: rgba(0, 0, 0, 0.1);
+        --scrollbar-thumb: #9ca3af;
+        background: var(--background);
+        background-color: #f9fafb;
+        color: var(--text-light);
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+        padding: 1rem;
+        overflow-x: hidden;
+        line-height: 1.5;
+      }
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        background-image: var(--grid-pattern);
+        background-position: 50% center;
+        background-size: 48px 48px;
+        pointer-events: none;
+        z-index: -1;
+        mask-image: radial-gradient(
+          circle at 50% 30%,
+          rgb(0, 0, 0) 30%,
+          rgba(0, 0, 0, 0) 85%
+        );
+        -webkit-mask-image: radial-gradient(
+          circle at 50% 30%,
+          rgb(0, 0, 0) 30%,
+          rgba(0, 0, 0, 0) 85%
+        );
+      }
+      body.dark {
+        --background: var(--gradient-dark);
+        --card-bg: var(--card-bg-dark);
+        --card-border: var(--card-border-dark);
+        --text: var(--text-dark);
+        --text-muted: var(--text-muted-dark);
+        --text-mute: var(--text-mute-ld);
+        --scrollbar-bg: rgba(255, 255, 255, 0.08);
+        --scrollbar-thumb: #424242;
+        background: var(--background);
+        background-color: #000000;
+        color: var(--text-dark);
+      }
+      body.dark::before {
+        background-image: var(--grid-pattern-dark);
+      }
+      .container {
+        max-width: min(90vw, 800px);
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        animation: c var(--anim-slow);
+      }
+      .header {
+        text-align: center;
+        padding: 0.5rem 0;
+      }
+      .header h1 {
+        font-family: var(--font-heading);
+        font-size: 2.25rem;
+        font-weight: 900;
+        background: linear-gradient(
+          90deg,
+          var(--primary),
+          var(--secondary) 50%,
+          var(--accent)
+        );
+        background-size: 300% 100%;
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+        margin-bottom: 0.4rem;
+        animation: b 45s ease-in-out infinite;
+        letter-spacing: 0.02em;
+      }
+      .header p {
+        font-family: var(--font-primary);
+        font-size: 1rem;
+        font-weight: 400;
+        color: var(--text-muted);
+        animation: c var(--anim-slow) 0.1s;
+      }
+      .floating-cards {
+        position: fixed;
+        right: 1rem;
+        top: 10rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        z-index: 1;
+      }
+      .floating-card {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        background: var(--card-bg);
+        border-radius: 8px;
+        padding: 0.6rem;
+        cursor: pointer;
+        font-size: 0.9rem;
+        transform: perspective(500px);
+      }
+      .floating-card:hover {
+        background: var(--secondary);
+        color: #fff;
+        box-shadow: 0 12px 24px rgba(0, 0, 0, 0.2);
+        transform: translateY(-2px) scale(1.05);
+      }
+      .floating-card i {
+        font-size: 1.2rem;
+        color: var(--primary);
+      }
+      .floating-card:hover i {
+        color: #fff;
+      }
+      .floating-card span {
+        font-family: var(--font-primary);
+        font-weight: 500;
+      }
+      @media (max-width: 768px) {
+        .floating-cards {
+          top: 6rem;
+        }
+        .floating-card span {
+          display: none;
+        }
+        .floating-card {
+          width: 40px;
+          height: 40px;
+          justify-content: center;
+          padding: 0.4rem;
+        }
+      }
+      .main-content {
+        display: grid;
+        max-width: min(90vw, 600px);
+        gap: 0.8rem;
+        margin: 0 auto;
+      }
+      .input-section {
+        grid-template-columns: 1fr 1fr;
+        gap: 0.7rem;
+        align-items: start;
+      }
+      .file-input-wrapper,
+      .input-section {
+        display: flex;
+        justify-content: center;
+      }
+      .file-input-wrapper {
+        position: relative;
+        align-items: center;
+        background: var(--card-bg);
+        border: 2px dashed var(--card-border);
+        border-radius: 8px;
+        padding: 1rem;
+        cursor: pointer;
+        max-width: 250px;
+        height: 94px;
+      }
+      .file-input-wrapper.dragover {
+        border-color: var(--primary);
+        background: rgba(59, 130, 246, 0.1);
+        transform: scale(1.02);
+      }
+      .file-input-wrapper input[type="file"] {
+        position: absolute;
+        top: 0;
+        left: 0;
+        opacity: 0;
+        width: 100%;
+        height: 100%;
+        cursor: pointer;
+      }
+      .file-input-content {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.5rem;
+        text-align: center;
+      }
+      .file-input-content i {
+        font-size: 1.5rem;
+        color: var(--primary);
+      }
+      .file-input-content span {
+        font-size: 0.9rem;
+        font-weight: 500;
+        color: var(--text);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 100%;
+      }
+      .file-input-content .drag-text {
+        font-size: 0.85rem;
+        font-weight: 400;
+        color: var(--text-muted);
+      }
+      .file-input-wrapper:hover {
+        background: var(--primary);
+        color: #fff;
+      }
+      .file-input-wrapper:hover .file-input-content .drag-text,
+      .file-input-wrapper:hover .file-input-content i,
+      .file-input-wrapper:hover .file-input-content span {
+        color: #fff;
+      }
+      .select-wrapper {
+        display: flex;
+        flex-direction: column;
+        gap: 0.8rem;
+        max-width: 200px;
+      }
+      #car-select {
+        width: 104%;
+      }
+      #size-select {
+        width: 120px;
+      }
+      .size-sync-wrapper {
+        gap: 0.5rem;
+      }
+      .size-sync-wrapper,
+      .sync-btn {
+        display: flex;
+        align-items: center;
+      }
+      .sync-btn {
+        border-radius: 50%;
+        width: 32px;
+        height: 32px;
+        background: var(--card-bg-light-opaque);
+        border: 1px solid var(--card-border);
+        cursor: pointer;
+        justify-content: center;
+        font-size: 1rem;
+        color: var(--text-muted);
+      }
+      .sync-btn.active {
+        background: var(--success);
+        color: #fff;
+        border-color: var(--success);
+      }
+      .sync-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none;
+      }
+      .dark .sync-btn {
+        background: var(--card-bg-dark);
+        color: var(--text);
+      }
+      .dark .sync-btn.active {
+        background: var(--success);
+        color: #fff;
+      }
+      .max-size-btn {
+        border-radius: 50%;
+        width: 32px;
+        height: 32px;
+        background: var(--card-bg-light-opaque);
+        border: 1px solid var(--card-border);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.8rem;
+        color: var(--text-muted);
+      }
+      .max-size-btn:hover:not(:disabled) {
+        background: var(--accent);
+        color: #fff;
+        border-color: var(--accent);
+      }
+      .max-size-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none;
+      }
+      .dark .max-size-btn {
+        background: var(--card-bg-dark);
+        color: var(--text);
+      }
+      .dark .max-size-btn:hover:not(:disabled) {
+        background: var(--accent);
+        color: #fff;
+      }
+      button,
+      select {
+        padding: 0.6rem 1rem;
+        border: none;
+        border-radius: 5px;
+        background: var(--card-bg);
+        color: var(--text);
+        font-family: var(--font-primary);
+        font-size: 1rem;
+        font-weight: 500;
+        cursor: pointer;
+      }
+      select {
+        appearance: none;
+        background-image: url('data:image/svg+xml;utf8,<svg fill="%231668dc" height="20" viewBox="0 0 20 20" width="20" xmlns="http://www.w3.org/2000/svg"><path d="M7.293 7.293a1 1 0 011.414 0L10 8.586l1.293-1.293a1 1 0 111.414 1.414l-2 2a1 1 0 01-1.414 0l-2-2a1 1 0 010-1.414z"/></svg>');
+        background-repeat: no-repeat;
+        background-position: right 0.6rem center;
+        background-size: 14px;
+      }
+      button:disabled,
+      select:disabled {
+        opacity: 0.6;
+      }
+      select#car-select {
+        max-height: 300px;
+        overflow-y: auto;
+      }
+      button:hover:not(:disabled),
+      select:hover:not(:disabled) {
+        background: var(--secondary);
+        color: #fff;
+      }
+      button:disabled,
+      select:disabled {
+        background: #d5d1db;
+        color: #847d8d;
+        cursor: not-allowed;
+        transform: none;
+      }
+      #save-btn.saving {
+        opacity: 0.7;
+        cursor: not-allowed;
+        pointer-events: none;
+      }
+      #save-btn.saving i {
+        animation: a 1s linear infinite;
+      }
+      @keyframes a {
+        0% {
+          transform: rotate(0deg);
+        }
+        to {
+          transform: rotate(1turn);
+        }
+      }
+      .colors-grid {
+        display: grid;
+        justify-content: center;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 0.7rem;
+        max-width: 600px;
+      }
+      .color-set {
+        background: var(--card-bg);
+        border: 1px solid var(--card-border);
+        border-radius: 8px;
+        padding: 1rem;
+        max-width: 180px;
+      }
+      .color-set:hover {
+        transform: translateY(-4px);
+      }
+      .color-set-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.6rem;
+        padding: 0.2rem 0;
+      }
+      .color-set-header strong {
+        font-family: var(--font-heading);
+        font-size: 1rem;
+        color: var(--primary);
+        font-weight: 700;
+      }
+      .color-set-header .drag-handle {
+        font-size: 1rem;
+        color: var(--text-muted);
+        cursor: move;
+        transition: color var(--anim-fast);
+      }
+      .color-set-header .drag-handle:hover {
+        color: var(--primary);
+      }
+      .color-row {
+        display: grid;
+        grid-template-columns: 30px 1fr 40px;
+        align-items: center;
+        gap: 0.6rem;
+        margin-bottom: 0.6rem;
+        max-width: 100%;
+      }
+      .slot-actions {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.4rem;
+        margin-bottom: 0.6rem;
+      }
+      .slot-action-btn {
+        padding: 0.35rem 0.45rem;
+        border-radius: 4px;
+        font-size: 0.72rem;
+        min-width: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.35rem;
+      }
+      .slot-action-btn i {
+        font-size: 0.75rem;
+      }
+      .color-trigger {
+        width: 30px;
+        height: 30px;
+        border: 1px solid var(--card-border);
+        cursor: pointer;
+        border-radius: 4px;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+      }
+      .color-trigger:hover {
+        transform: scale(1.15);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      }
+      .color-trigger:focus-visible {
+        outline: 2px solid var(--primary);
+        outline-offset: 2px;
+      }
+      .color-native-input {
+        display: none;
+      }
+      .pro-color-picker {
+        position: fixed;
+        display: none;
+        gap: 0.65rem;
+        width: 430px;
+        max-width: calc(100vw - 24px);
+        padding: 0.65rem;
+        border-radius: 10px;
+        border: 1px solid var(--card-border);
+        background: var(--card-bg-light-opaque);
+        box-shadow: 0 14px 32px rgba(0, 0, 0, 0.35);
+        z-index: 6;
+        transition: none;
+      }
+      .pro-color-picker.active {
+        display: grid;
+      }
+      .dark .pro-color-picker {
+        background: #151c2b;
+      }
+      .pro-picker-titlebar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0.35rem 0.35rem 0.45rem;
+        border-bottom: 1px solid var(--card-border);
+        cursor: move;
+        user-select: none;
+        touch-action: none;
+      }
+      .pro-picker-titlebar span {
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: var(--text);
+      }
+      .pro-picker-title-close {
+        width: 28px;
+        height: 24px;
+        min-width: 28px;
+        padding: 0;
+        border-radius: 4px;
+        font-size: 1rem;
+        line-height: 1;
+      }
+      .pro-picker-content {
+        display: grid;
+        grid-template-columns: 1fr 148px;
+        gap: 0.8rem;
+      }
+      .pro-picker-main {
+        display: grid;
+        grid-template-columns: 1fr 24px;
+        gap: 0.6rem;
+      }
+      .pro-picker-sv {
+        position: relative;
+        min-height: 220px;
+        border-radius: 7px;
+        cursor: crosshair;
+        touch-action: none;
+      }
+      .pro-picker-sv-cursor {
+        position: absolute;
+        width: 13px;
+        height: 13px;
+        border: 2px solid #fff;
+        border-radius: 50%;
+        transform: translate(-50%, -50%);
+        box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.45);
+        pointer-events: none;
+        transition: none;
+      }
+      .pro-picker-hue {
+        position: relative;
+        border-radius: 7px;
+        background: linear-gradient(
+          to bottom,
+          #ff0000 0%,
+          #ffff00 17%,
+          #00ff00 33%,
+          #00ffff 50%,
+          #0000ff 67%,
+          #ff00ff 83%,
+          #ff0000 100%
+        );
+        cursor: ns-resize;
+        touch-action: none;
+      }
+      .pro-picker-hue-cursor {
+        position: absolute;
+        left: -2px;
+        right: -2px;
+        height: 4px;
+        border-radius: 2px;
+        background: #fff;
+        box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.35);
+        transform: translateY(-50%);
+        pointer-events: none;
+        transition: none;
+      }
+      .pro-picker-side {
+        display: grid;
+        gap: 0.55rem;
+        align-content: start;
+      }
+      .pro-picker-preview {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.45rem;
+      }
+      .pro-picker-preview span {
+        display: block;
+        font-size: 0.7rem;
+        color: var(--text-muted);
+        margin-bottom: 0.2rem;
+      }
+      .pro-picker-new,
+      .pro-picker-current {
+        height: 36px;
+        border-radius: 6px;
+        border: 1px solid var(--card-border);
+      }
+      .pro-picker-rgb {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 0.4rem;
+      }
+      .pro-picker-rgb label,
+      .pro-picker-hex-label {
+        display: grid;
+        gap: 0.2rem;
+        font-size: 0.72rem;
+        color: var(--text-muted);
+      }
+      .pro-picker-rgb input,
+      .pro-picker-hex-label input {
+        width: 100%;
+        border: 1px solid var(--card-border);
+        border-radius: 6px;
+        background: var(--card-bg);
+        color: var(--text);
+        font-size: 0.8rem;
+        padding: 0.35rem 0.45rem;
+      }
+      .pro-picker-close {
+        width: 100%;
+        font-size: 0.82rem;
+        padding: 0.45rem;
+      }
+
+      .color-row span {
+        font-family: var(--font-primary);
+        font-size: 0.85rem;
+        font-weight: 500;
+        color: var(--text-muted);
+      }
+      .color-row .reset-btn {
+        padding: 0.2rem 0.4rem;
+        background: var(--error);
+        color: #fff;
+        border-radius: 4px;
+        border: none;
+        cursor: pointer;
+        font-size: 0.7rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 24px;
+      }
+      .color-row .reset-btn i {
+        font-size: 0.8rem;
+      }
+      .color-row .reset-btn:hover {
+        background: #dc2626;
+      }
+      .preview {
+        height: 35px;
+        justify-content: center;
+        border-radius: 6px;
+        overflow: hidden;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+        position: relative;
+        animation: c var(--anim-med);
+      }
+      .preview div {
+        width: 100%;
+        height: 100%;
+        position: absolute;
+      }
+      .backdrop {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.4);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        opacity: 0;
+        pointer-events: none;
+        z-index: 99;
+        transition:
+          opacity var(--anim-med),
+          backdrop-filter var(--anim-med);
+      }
+      @supports not (backdrop-filter: blur(8px)) {
+        .backdrop {
+          background: rgba(0, 0, 0, 0.6);
+        }
+      }
+      .backdrop.active {
+        opacity: 1;
+        pointer-events: auto;
+      }
+      .guide-popup,
+      .vehicles-popup,
+      .library-popup,
+      .update-popup {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%) scale(0.9);
+        background: var(--card-bg-light-opaque);
+        border: 1px solid var(--card-border);
+        border-radius: 8px;
+        padding: 1rem;
+        max-width: 600px;
+        width: 70%;
+        max-height: 50vh;
+        overflow-y: auto;
+        box-shadow: var(--card-shadow);
+        opacity: 0;
+        pointer-events: none;
+        z-index: 100;
+        transition:
+          opacity var(--anim-med),
+          transform var(--anim-med);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+      }
+      .dark .guide-popup,
+      .dark .vehicles-popup,
+      .dark .library-popup,
+      .dark .update-popup {
+        background: var(--card-bg-dark);
+      }
+      .guide-popup.active,
+      .vehicles-popup.active,
+      .library-popup.active,
+      .update-popup.active {
+        opacity: 1;
+        pointer-events: auto;
+        transform: translate(-50%, -50%) scale(1);
+        animation: d var(--anim-med);
+      }
+
+      /* Update Popup Specific Styles */
+      .update-popup {
+        max-width: 450px;
+        width: 90%;
+        text-align: center;
+        padding: 2rem;
+        position: relative; /* Required for absolute positioned close button */
+      }
+      .update-icon {
+        width: 80px;
+        height: 80px;
+        margin: 0 auto 1rem;
+        background: linear-gradient(135deg, var(--primary), var(--secondary));
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+      }
+      .update-icon i {
+        font-size: 2.5rem;
+        color: white;
+      }
+      .update-popup h3 {
+        font-family: var(--font-heading);
+        font-size: 1.8rem;
+        color: var(--accent);
+        margin-bottom: 0.5rem;
+      }
+      .update-version {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: var(--text);
+        margin-bottom: 1rem;
+      }
+      .update-changes {
+        font-size: 0.95rem;
+        color: var(--text-muted);
+        margin-bottom: 1.5rem;
+        line-height: 1.5;
+      }
+      .update-buttons {
+        display: flex;
+        gap: 0.8rem;
+        justify-content: center;
+      }
+      .update-btn-secondary {
+        padding: 0.7rem 1.5rem;
+        border-radius: 25px;
+        background: rgba(107, 114, 128, 0.15);
+        color: var(--text);
+        border: 1px solid var(--card-border);
+        font-weight: 600;
+        cursor: pointer;
+        transition: all var(--anim-fast);
+      }
+      .update-btn-secondary:hover {
+        background: rgba(107, 114, 128, 0.25);
+        transform: translateY(-2px);
+      }
+      .update-btn-primary {
+        padding: 0.7rem 1.5rem;
+        border-radius: 25px;
+        background: var(--primary);
+        color: white;
+        border: none;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all var(--anim-fast);
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+      .update-btn-primary:hover {
+        filter: brightness(1.1);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(22, 104, 220, 0.4);
+      }
+      .library-list {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+        gap: 1rem;
+        padding: 0.5rem 0;
+      }
+      .library-item {
+        background: var(--card-bg);
+        border: 1px solid var(--card-border);
+        border-radius: 8px;
+        padding: 0.8rem;
+        position: relative;
+        transition: all var(--anim-fast);
+      }
+      .library-item:hover {
+        transform: translateY(-3px);
+        border-color: var(--primary);
+      }
+      .library-item-preview {
+        height: 40px;
+        border-radius: 4px;
+        margin-bottom: 0.5rem;
+        position: relative;
+        overflow: hidden;
+      }
+      .library-item-name {
+        font-size: 0.8rem;
+        font-weight: 600;
+        margin-bottom: 0.4rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .library-item-actions {
+        display: flex;
+        gap: 0.3rem;
+      }
+      .library-item-btn {
+        padding: 0.3rem;
+        font-size: 0.7rem;
+        flex: 1;
+      }
+      .empty-library {
+        grid-column: 1 / -1;
+        text-align: center;
+        padding: 2rem;
+        color: var(--text-muted);
+        font-style: italic;
+      }
+      .slot-action-btn.save-library-btn {
+        background: var(--accent);
+        color: #fff;
+      }
+      .slot-action-btn.save-library-btn:hover {
+        background: var(--primary);
+      }
+      .guide-popup h3,
+      .vehicles-popup h3,
+      .vehicles-popup h4 {
+        font-family: var(--font-heading);
+        font-size: 1.4rem;
+        margin-bottom: 0.6rem;
+        color: var(--accent);
+        font-weight: 700;
+      }
+      .guide-popup ul,
+      .vehicles-popup ul {
+        list-style: none;
+        padding: 0;
+      }
+      .guide-popup li,
+      .vehicles-popup li {
+        font-family: var(--font-primary);
+        margin-bottom: 0.5rem;
+        color: var(--text);
+        font-size: 0.95rem;
+        line-height: 1.5;
+      }
+      .guide-popup strong,
+      .vehicles-popup strong {
+        font-family: var(--font-primary);
+        color: var(--primary);
+        font-weight: 600;
+      }
+      .guide-popup h3 {
+        font-size: 1.6rem;
+      }
+      .guide-popup h4 {
+        font-size: 1.1rem;
+        color: var(--accent);
+      }
+      .guide-popup p {
+        font-family: var(--font-primary);
+        font-size: 1rem;
+      }
+      .guide-popup li,
+      .guide-popup strong {
+        font-size: 0.95rem;
+      }
+      .guide-popup .close-btn,
+      .vehicles-popup .close-btn,
+      .update-popup .close-btn {
+        position: absolute;
+        top: 0.6rem;
+        right: 0.6rem;
+        padding: 0.4rem;
+        background: var(--error);
+        color: #fff;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+      .guide-popup .close-btn:hover,
+      .vehicles-popup .close-btn:hover,
+      .update-popup .close-btn:hover {
+        background: #dc2626;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      }
+      #vehicle-search {
+        width: 100%;
+        padding: 0.6rem 1rem;
+        margin-bottom: 1rem;
+        border: 1px solid var(--card-border);
+        border-radius: 8px;
+        background: var(--card-bg);
+        color: var(--text);
+        font-family: var(--font-primary);
+        font-size: 0.9rem;
+        font-weight: 500;
+        outline: none;
+        transition: all var(--anim-fast);
+      }
+      #vehicle-search:focus {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+      }
+      #vehicle-search::placeholder {
+        color: var(--text-muted);
+      }
+      #vehicle-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+      }
+      #vehicle-list h4 {
+        margin-top: 1rem;
+        margin-bottom: 0.5rem;
+        font-size: 1.2rem;
+        color: var(--accent);
+        font-weight: 600;
+      }
+      #vehicle-list ul {
+        padding: 0;
+      }
+      #vehicle-list li {
+        padding: 0.1rem 0.5rem;
+        background: var(--card-bg);
+        border-radius: 8px;
+        font-family: var(--font-primary);
+        font-size: 0.9rem;
+        color: var(--text);
+        cursor: pointer;
+        transition: all var(--anim-fast);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      #vehicle-list li:hover {
+        background: #0000001c;
+        color-scheme: #fff;
+        transform: translateX(3px);
+      }
+      #vehicle-list li em {
+        font-size: 0.8rem;
+        color: var(--text-mute);
+      }
+      #vehicle-list li:hover em {
+        color: var(--text-muted);
+      }
+      .action-toolbar {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        background: var(--card-bg-light-opaque);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border: 1px solid var(--card-border);
+        border-radius: 50px;
+        position: sticky;
+        bottom: 1rem;
+        width: fit-content;
+        margin: 1.5rem auto 1rem;
+        z-index: 5;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        animation: c var(--anim-med);
+      }
+      .dark .action-toolbar {
+        background: rgba(17, 24, 39, 0.85);
+      }
+      .action-toolbar button {
+        min-width: unset;
+        white-space: nowrap;
+        padding: 0.45rem 0.9rem;
+        font-size: 0.85rem;
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        border-radius: 25px;
+        transition: all var(--anim-fast);
+        font-weight: 600;
+        border: 1px solid transparent;
+      }
+      .action-toolbar button i {
+        font-size: 0.9rem;
+      }
+      #random-all-btn {
+        background: #f59e0b;
+        color: white;
+      }
+      #random-all-btn:hover:not(:disabled) {
+        background: #d97706;
+        transform: translateY(-2px);
+      }
+      #copy-vehicle-btn,
+      #paste-vehicle-btn {
+        background: var(--primary);
+        color: white;
+      }
+      #copy-vehicle-btn:hover:not(:disabled),
+      #paste-vehicle-btn:hover:not(:disabled) {
+        filter: brightness(1.1);
+        transform: translateY(-2px);
+      }
+      .reset-all-btn {
+        background: rgba(107, 114, 128, 0.15);
+        color: var(--text);
+        border: 1px solid var(--card-border) !important;
+      }
+      .reset-all-btn:hover {
+        background: rgba(107, 114, 128, 0.25);
+      }
+      #save-btn {
+        background: var(--success);
+        color: white;
+        padding-left: 1.2rem;
+        padding-right: 1.2rem;
+      }
+      #save-btn:hover:not(:disabled) {
+        background: #15803d;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
+      }
+      .toast-container {
+        position: fixed;
+        top: 1.5rem;
+        right: 1.5rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.6rem;
+        z-index: 100;
+        max-width: 320px;
+        width: 100%;
+        pointer-events: none;
+      }
+      .toast-item {
+        background: var(--card-bg-light-opaque);
+        color: var(--text);
+        padding: 0.7rem 1rem;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        display: flex;
+        align-items: center;
+        gap: 0.7rem;
+        font-size: 0.85rem;
+        font-weight: 500;
+        transform: translateX(120%);
+        opacity: 0;
+        transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+        pointer-events: auto;
+        border: 1px solid var(--card-border);
+        border-left: 4px solid transparent;
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+      }
+      .toast-item.show {
+        transform: translateX(0);
+        opacity: 1;
+      }
+      .toast-item.hide {
+        transform: translateX(20px);
+        opacity: 0;
+      }
+      .toast-item.success {
+        border-left-color: var(--success);
+      }
+      .toast-item.error {
+        border-left-color: var(--error);
+      }
+      .toast-item.warning {
+        border-left-color: #f59e0b;
+      }
+      .toast-item.info {
+        border-left-color: var(--primary);
+      }
+      .toast-icon {
+        font-size: 1.1rem;
+        flex-shrink: 0;
+      }
+      .toast-close {
+        margin-left: auto;
+        background: none;
+        border: none;
+        color: var(--text-muted);
+        font-size: 1rem;
+        cursor: pointer;
+        padding: 0.1rem;
+        opacity: 0.6;
+        transition: opacity 0.2s;
+      }
+      .toast-close:hover {
+        opacity: 1;
+      }
+      .dark .toast-item {
+        background: rgba(17, 24, 39, 0.9);
+      }
+      .scroll-top-btn {
+        position: fixed;
+        bottom: 1.5rem;
+        right: 1.5rem;
+        background: var(--primary);
+        color: #fff;
+        border: none;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        display: none;
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+        cursor: pointer;
+      }
+      .scroll-top-btn,
+      .scroll-top-btn i {
+        align-items: center;
+        justify-content: center;
+      }
+      .scroll-top-btn i {
+        display: flex;
+      }
+      .scroll-top-btn:hover {
+        background: var(--secondary);
+        transform: scale(1.15);
+      }
+      .update-btn {
+        position: relative;
+        overflow: visible;
+      }
+      .update-btn i {
+        font-size: 1.3rem;
+      }
+      .update-badge {
+        position: absolute;
+        top: -4px;
+        right: -4px;
+        background: var(--secondary);
+        color: #000;
+        font-size: 0.65rem;
+        font-weight: 700;
+        padding: 2px 6px;
+        border-radius: 10px;
+        display: none;
+        z-index: 2;
+      }
+      .update-badge.show {
+        display: block;
+      }
+      .error {
+        background: rgba(239, 68, 68, 0.15);
+        border: 1px solid var(--error);
+        border-radius: 6px;
+        padding: 0.8rem;
+        color: var(--error);
+        font-family: var(--font-primary);
+      }
+      #save-btn,
+      .reset-all-btn {
+        padding: 0.3rem 1rem;
+        font-size: 1rem;
+        width: auto;
+        min-width: 95px;
+      }
+      .pro-picker-eyedropper {
+        width: 100%;
+        font-size: 0.82rem;
+        padding: 0.45rem;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <header class="header">
+        <h1>Vehicle Colors Tool</h1>
+        <p>
+          Customize vehicle colors for Split/Second's VehicleColors.params file
+        </p>
+        <div class="floating-cards">
+          <button
+            class="floating-card theme-toggle"
+            title="Toggle theme"
+            aria-label="Toggle theme"
+          >
+            <i class="fas fa-sun"></i>
+          </button>
+          <button
+            class="floating-card"
+            id="guideBtn"
+            title="Usage Guide"
+            aria-label="Open usage guide"
+          >
+            <i class="fas fa-book"></i>
+          </button>
+          <button
+            class="floating-card"
+            id="vehiclesBtn"
+            title="Vehicle List"
+            aria-label="Open vehicle list"
+          >
+            <i class="fas fa-car"></i>
+          </button>
+          <button
+            class="floating-card"
+            id="libraryBtn"
+            title="Color Library"
+            aria-label="Open color library"
+          >
+            <i class="fas fa-palette"></i>
+          </button>
+          <button
+            class="floating-card update-btn"
+            id="checkUpdateBtn"
+            title="Check for Updates"
+          >
+            <i class="fas fa-download"></i>
+            <span class="update-badge" id="updateBadge">!</span>
+          </button>
+        </div>
+      </header>
+      <main class="main-content">
+        <section class="input-section">
+          <div class="file-input-wrapper">
+            <input type="file" id="file-upload" accept=".params" />
+            <div class="file-input-content">
+              <i class="fas fa-upload"></i> <span>Upload File</span>
+              <span class="drag-text">or drag and drop here</span>
+            </div>
+          </div>
+          <div class="select-wrapper">
+            <select id="car-select" class="custom-scrollbar">
+              <option value="">Select a car</option>
+            </select>
+            <div class="size-sync-wrapper">
+              <select id="size-select" disabled="disabled">
+                <option value="">Palette size</option>
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+                <option value="5">5</option>
+                <option value="6">6</option>
+                <option value="7">7</option>
+                <option value="8">8</option>
+                <option value="9">9</option>
+              </select>
+              <button
+                id="sync-btn"
+                class="sync-btn"
+                disabled="disabled"
+                title="Toggle sync with paired vehicle"
+                aria-label="Toggle sync with paired vehicle"
+              >
+                <i class="fas fa-sync-alt"></i>
+              </button>
+              <button
+                id="max-size-btn"
+                class="max-size-btn"
+                disabled="disabled"
+                title="Set max palette size (9) for all vehicles"
+                aria-label="Set max palette size (9) for all vehicles"
+              >
+                <i class="fas fa-expand-arrows-alt"></i>
+              </button>
+            </div>
+          </div>
+        </section>
+        <section id="colors-grid" class="colors-grid"></section>
+        <div class="action-toolbar">
+          <button class="reset-all-btn" title="Revert all changes for this car">
+            <i class="fas fa-undo"></i> Reset
+          </button>
+          <button
+            id="random-all-btn"
+            disabled="disabled"
+            title="Smart Randomize All Slots"
+          >
+            <i class="fas fa-dice"></i> Random
+          </button>
+          <button
+            id="copy-vehicle-btn"
+            disabled="disabled"
+            title="Copy all palettes from this car"
+          >
+            <i class="fas fa-copy"></i> Copy
+          </button>
+          <button
+            id="paste-vehicle-btn"
+            disabled="disabled"
+            title="Paste palettes to this car"
+          >
+            <i class="fas fa-paste"></i> Paste
+          </button>
+          <button
+            id="save-btn"
+            disabled="disabled"
+            title="Download the updated file"
+          >
+            <i class="fas fa-save"></i> Save
+          </button>
+        </div>
+      </main>
+      <div class="backdrop"></div>
+      <section class="guide-popup custom-scrollbar">
+        <button class="close-btn" aria-label="Close usage guide">
+          <i class="fas fa-times"></i>
+        </button>
+        <h3
+          style="
+            border-bottom: 1px solid var(--card-border);
+            padding-bottom: 0.5rem;
+            margin-bottom: 1.5rem;
+          "
+        >
+          Usage Guide & Documentation
+        </h3>
+
+        <div style="margin-bottom: 1.8rem">
+          <h4 style="color: var(--primary); margin-bottom: 0.8rem">
+            1. Getting Started & Offline Support
+          </h4>
+          <ul style="list-style: none; padding-left: 0.5rem; font-size: 0.9rem">
+            <li style="margin-bottom: 0.6rem">
+              <strong>• File Upload:</strong> Click the "Upload File" area or
+              drag your <code>VehicleColors.params</code> file directly into the
+              tool.
+            </li>
+            <li style="margin-bottom: 0.6rem">
+              <strong>• Fully Offline:</strong> This tool is now 100%
+              offline-ready. All resources (fonts, icons, styles) are loaded
+              locally from the <code>resources/</code> folder.
+            </li>
+            <li style="margin-bottom: 0.6rem">
+              <strong>• Vehicle Selection:</strong> Once uploaded, use the main
+              dropdown to select a car. Use the <strong>Vehicle List</strong>
+              <i class="fas fa-car"></i> icon for a searchable directory.
+            </li>
+            <li
+              style="
+                margin-top: 0.8rem;
+                padding: 0.5rem;
+                background: rgba(245, 158, 11, 0.1);
+                border-radius: 4px;
+                border-left: 3px solid #f59e0b;
+              "
+            >
+              <strong style="color: #f59e0b"
+                >[Important] SSDC Fixed File:</strong
+              >
+              The <code>fixed-vehiclecolors_for-ssdc/</code> folder contains a
+              corrected <code>VehicleColors.params</code>. This fix prevents a
+              known bug where DLC vehicle palettes could interfere with each
+              other. <strong>If this is your first time using the tool</strong>,
+              replace your game file with this one before loading it to make
+              changes.
+            </li>
+          </ul>
+        </div>
+
+        <div style="margin-bottom: 1.8rem">
+          <h4 style="color: var(--primary); margin-bottom: 0.8rem">
+            2. Understanding the Color Layers
+          </h4>
+          <p style="font-size: 0.9rem; line-height: 1.5; margin-bottom: 0.8rem">
+            Each color slot consists of three technical layers used by the
+            game's engine:
+          </p>
+          <ul style="list-style: none; padding-left: 0.5rem; font-size: 0.9rem">
+            <li style="margin-bottom: 0.4rem">
+              <strong>— Paint:</strong> Acts as the base shading and tint layer.
+            </li>
+            <li style="margin-bottom: 0.4rem">
+              <strong>— Lacquer:</strong> The primary visible body paint. This
+              is your main color.
+            </li>
+            <li style="margin-bottom: 0.4rem">
+              <strong>— Flake:</strong> A glossy, metallic layer that creates
+              reflections and shine highlights.
+            </li>
+          </ul>
+          <p
+            style="
+              font-size: 0.85rem;
+              color: var(--text-muted);
+              margin-top: 0.5rem;
+              font-style: italic;
+            "
+          >
+            Note: For a "flat" solid look, match the hex/RGB values across all
+            three layers.
+          </p>
+          <div
+            style="
+              margin-top: 0.8rem;
+              padding: 0.6rem;
+              background: rgba(var(--primary-rgb), 0.1);
+              border-left: 3px solid var(--primary);
+              border-radius: 4px;
+            "
+          >
+            <strong style="font-size: 0.85rem; color: var(--primary)"
+              >In-Game Swatch Logic:</strong
+            >
+            <p
+              style="
+                font-size: 0.8rem;
+                line-height: 1.4;
+                margin-top: 0.2rem;
+                color: var(--text-main);
+              "
+            >
+              The game uses the <strong>'Swatch type'</strong> parameter
+              (usually set to Paint) to display the color preview in menus.
+              Whatever color value is assigned to that specific layer will be
+              shown as the small square preview in the vehicle selection screen.
+            </p>
+          </div>
+        </div>
+
+        <div style="margin-bottom: 1.8rem">
+          <h4 style="color: #f59e0b; margin-bottom: 0.8rem">3. New Features</h4>
+          <ul style="list-style: none; padding-left: 0.5rem; font-size: 0.9rem">
+            <li style="margin-bottom: 0.8rem">
+              <strong style="color: #f59e0b">★ Color Library:</strong> Found a
+              perfect combo? Click <strong>"+ Library"</strong> on any slot to
+              save it. Open the Library <i class="fas fa-palette"></i> menu to
+              apply your saved presets to any vehicle.
+            </li>
+            <li style="margin-bottom: 0.8rem">
+              <strong style="color: #f59e0b">★ Full Vehicle Copy/Paste:</strong>
+              Use the <strong>Copy</strong> and <strong>Paste</strong> buttons
+              in the bottom toolbar to transfer all color slots from one vehicle
+              to another in a single click.
+            </li>
+            <li style="margin-bottom: 0.8rem">
+              <strong style="color: #f59e0b">★ Sync Logic (DLC):</strong> When
+              editing DLC vehicles, the <strong>Sync</strong>
+              <i class="fas fa-sync-alt"></i> feature ensures that hidden
+              "Placeholder" models are updated simultaneously to prevent in-game
+              rendering bugs.
+            </li>
+            <li style="margin-bottom: 0.8rem">
+              <strong style="color: #f59e0b">★ Smart Randomizer:</strong> Click
+              the <i class="fas fa-dice"></i> icon to generate harmonious color
+              schemes based on color theory (Complementary, Analogous, etc.) to
+              ensure a professional look.
+            </li>
+          </ul>
+        </div>
+
+        <div style="margin-bottom: 1.8rem">
+          <h4 style="color: var(--primary); margin-bottom: 0.8rem">
+            4. Layout & Management
+          </h4>
+          <ul style="list-style: none; padding-left: 0.5rem; font-size: 0.9rem">
+            <li style="margin-bottom: 0.6rem">
+              <strong>• Palette Size:</strong> Change the number of available
+              color slots (1-9) per vehicle.
+            </li>
+            <li style="margin-bottom: 0.6rem">
+              <strong>• Batch Max Size:</strong> Click
+              <i class="fas fa-expand-arrows-alt"></i> to unlock all 9 slots for
+              every vehicle in the file at once.
+            </li>
+            <li style="margin-bottom: 0.6rem">
+              <strong>• Drag & Drop:</strong> Use the
+              <i class="fas fa-grip-vertical"></i> handle on any slot to reorder
+              your colors.
+            </li>
+          </ul>
+        </div>
+
+        <div style="margin-bottom: 1rem">
+          <h4 style="color: var(--success); margin-bottom: 0.8rem">
+            5. Finalizing Your Changes
+          </h4>
+          <p style="font-size: 0.9rem; line-height: 1.5">
+            Click <strong>Save</strong> in the bottom toolbar. The tool will
+            generate a perfectly formatted
+            <code>VehicleColors.params</code> file. Replace the original file in
+            your game's directory to see your new designs in action.
+          </p>
+        </div>
+      </section>
+      <section class="vehicles-popup custom-scrollbar">
+        <button class="close-btn" aria-label="Close vehicle list">
+          <i class="fas fa-times"></i>
+        </button>
+        <h3>Vehicle List</h3>
+        <input
+          type="text"
+          id="vehicle-search"
+          placeholder="Search vehicles..."
+          aria-label="Search vehicles"
+        />
+        <div id="vehicle-list">
+          <h4>Main Game Vehicles</h4>
+          <ul>
+            <li>Musclecar_01<strong>RYBACK BRAWLER</strong></li>
+            <li>Musclecar_02<strong>COBRETTI NERO GT400</strong></li>
+            <li>Musclecar_03<strong>COBRETTI IRIDIUM</strong></li>
+            <li>Musclecar_04<strong>RYBACK MOHAWK</strong></li>
+            <li>Musclecar_05<strong>COBRETTI GT500</strong></li>
+            <li>Musclecar_06<strong>COBRETTI PURSUIT</strong></li>
+            <li>Musclecar_07<strong>RYBACK COYOTE</strong></li>
+            <li>Musclecar_08<strong>HANZO GT</strong></li>
+            <li>Musclecar_09<strong>RYBACK FIRESTORM</strong></li>
+            <li>Musclecar_10<strong>COBRETTI CASCADE</strong></li>
+            <li>Musclecar_11<strong>COBRETTI IRIDIUM BBX</strong></li>
+            <li>Musclecar_12<strong>RYBACK BRAWLER GSX</strong></li>
+            <li>Musclecar_13<strong>RYBACK MOHAWK XDX</strong></li>
+            <li>Musclecar_14<strong>RYBACK COYOTE AMX</strong></li>
+            <li>Musclecar_15<strong>RYBACK MOHAWK FSX</strong></li>
+            <li>Musclecar_16<strong>RYBACK MOHAWK XL</strong></li>
+            <li>Musclecar_Drone<em>Only visible via Game Modding</em></li>
+            <li>Musclecar_Ghost<em>Only visible via Game Modding</em></li>
+            <li>NemesisTruck01<em>Only visible via Game Modding</em></li>
+            <li>NemTruck1Trai1<em>Only visible via Game Modding</em></li>
+            <li>NemTruck1Trai2<em>Only visible via Game Modding</em></li>
+            <li>Supercar_01<strong>RYBACK CYCLONE RS</strong></li>
+            <li>Supercar_02<strong>COBRETTI VORTEX</strong></li>
+            <li>Supercar_03<strong>HANZO INDUS V8R</strong></li>
+            <li>Supercar_04<strong>COBRETTI 455 GT</strong></li>
+            <li>Supercar_05<strong>COBRETTI 530 GTS</strong></li>
+            <li>Supercar_06<strong>COBRETTI GT RS</strong></li>
+            <li>Supercar_07<strong>COBRETTI SLIPSTREAM</strong></li>
+            <li>Supercar_08<strong>HANZO FX350</strong></li>
+            <li>Supercar_09<strong>HANZO BAYONET R</strong></li>
+            <li>Supercar_10<strong>COBRETTI 455 GT BBX</strong></li>
+            <li>Supercar_11<strong>COBRETTI SLIPSTREAM FSX</strong></li>
+            <li>Supercar_12<strong>COBRETTI VORTEX GX</strong></li>
+            <li>Supercar_13<strong>HANZO INDUS GSX</strong></li>
+            <li>Supercar_14<strong>HANZO BAYONET MX</strong></li>
+            <li>Supercar_15<strong>HANZO FX350 CX</strong></li>
+            <li>Supercar_16<strong>COBRETTI SLIPSTREAM XL</strong></li>
+            <li>Truck_01<strong>RYBACK TITAN</strong></li>
+            <li>Truck_02<strong>RYBACK THUNDER</strong></li>
+            <li>Truck_03<strong>RYBACK TORNADO</strong></li>
+            <li>Truck_04<strong>RYBACK BANDIT</strong></li>
+            <li>Truck_05<strong>RYBACK TORNADO BBX</strong></li>
+            <li>Truck_06<strong>RYBACK TITAN WMX</strong></li>
+            <li>Truck_07<strong>RYBACK BANDIT FSX</strong></li>
+            <li>Truck_08<strong>RYBACK BANDIT XL</strong></li>
+            <li>Truck_Demolition<em>Only visible via Game Modding</em></li>
+            <li>Unique_01<strong>ELITE 440 SPECIAL</strong></li>
+            <li>Unique_02<strong>ELITE S510</strong></li>
+            <li>Unique_03<strong>ELITE GOLIATH</strong></li>
+            <li>Unique_04<strong>ELITE GT12</strong></li>
+          </ul>
+          <h4>DLC Vehicles</h4>
+          <ul>
+            <li>
+              Musclecar_17<strong>COBRETTI CENTAUR</strong
+              ><em>Model ID: <strong>Placeholder_09</strong></em>
+            </li>
+            <li>
+              Musclecar_18<strong>RYBACK JAVELIN</strong
+              ><em>Model ID: <strong>Placeholder_10</strong></em>
+            </li>
+            <li>
+              Musclecar_19<strong>RYBACK COYOTE SPECIAL</strong
+              ><em>Model ID: <strong>Placeholder_08</strong></em>
+            </li>
+            <li>
+              Truck_09<strong>HANZO KANOBO</strong
+              ><em>Model ID: <strong>Placeholder_11</strong></em>
+            </li>
+            <li>
+              Unique_23<strong>ELITE S510 VX</strong
+              ><em>Model ID: <strong>Placeholder_07</strong></em>
+            </li>
+            <li>
+              Unique_22<strong>ELITE S510 RP</strong
+              ><em>Model ID: <strong>Placeholder_06</strong></em>
+            </li>
+            <li>
+              Unique_21<strong>ELITE 440 BRN</strong
+              ><em>Model ID: <strong>Placeholder_05</strong></em>
+            </li>
+            <li>
+              Supercar_20<strong>HANZO KATANA</strong
+              ><em>Model ID: <strong>Placeholder_04</strong></em>
+            </li>
+            <li>
+              Supercar_19<strong>RYBACK VULCAN</strong
+              ><em>Model ID: <strong>Placeholder_03</strong></em>
+            </li>
+            <li>
+              Supercar_18<strong>COBRETTI SEVERUS</strong
+              ><em>Model ID: <strong>Placeholder_02</strong></em>
+            </li>
+            <li>
+              Supercar_17<strong>RYBACK CYCLONE SPECIAL</strong
+              ><em>Model ID: <strong>Placeholder_01</strong></em>
+            </li>
+          </ul>
+        </div>
+      </section>
+      <section class="library-popup custom-scrollbar">
+        <button class="close-btn" aria-label="Close color library">
+          <i class="fas fa-times"></i>
+        </button>
+        <h3>Color Library</h3>
+        <p
+          style="
+            font-size: 0.85rem;
+            margin-bottom: 1rem;
+            color: var(--text-muted);
+          "
+        >
+          Save your favorite color palettes here to reuse them on other
+          vehicles.
+        </p>
+        <div id="library-list" class="library-list">
+          <div class="empty-library">
+            Your library is empty. Save a palette from a vehicle slot!
+          </div>
+        </div>
+        <div style="margin-top: 1rem; text-align: right">
+          <button
+            id="clear-library-btn"
+            class="library-item-btn"
+            style="
+              background: var(--error);
+              color: white;
+              width: auto;
+              padding: 0.5rem 1rem;
+            "
+          >
+            <i class="fas fa-trash"></i> Clear All Presets
+          </button>
+        </div>
+      </section>
+
+      <section class="update-popup">
+        <button
+          class="close-btn"
+          id="updatePopupClose"
+          aria-label="Close update notification"
+        >
+          <i class="fas fa-times"></i>
+        </button>
+        <div class="update-icon">
+          <i class="fas fa-download"></i>
+        </div>
+        <h3>Update Available!</h3>
+        <p class="update-version">Version <span id="updateVersion"></span></p>
+        <p class="update-changes" id="updateChanges"></p>
+        <div class="update-buttons">
+          <button class="update-btn-secondary" id="updateLaterBtn">
+            Later
+          </button>
+          <button class="update-btn-primary" id="updateDownloadBtn">
+            <i class="fas fa-download"></i> Download Now
+          </button>
+        </div>
+      </section>
+    </div>
+
+    <script>
+      const CURRENT_VERSION = "1.9.1"; // current version
+      const UPDATE_JSON_URL = "http://romtime.ir:8081/version.json"; // update info from server2mediafire
+      let currentUpdateData = null;
+      let closeBtn;
+
+      let updatePopup,
+        updatePopupClose,
+        updateVersionEl,
+        updateChangesEl,
+        updateLaterBtn,
+        updateDownloadBtn;
+
+      function showUpdatePopup(updateData) {
+        currentUpdateData = updateData;
+        updateVersionEl.textContent = updateData.version;
+        updateChangesEl.textContent =
+          updateData.changes || "Click Download Now to get the latest version.";
+        backdrop.classList.add("active");
+        updatePopup.classList.add("active");
+      }
+
+      function hideUpdatePopup() {
+        backdrop.classList.remove("active");
+        updatePopup.classList.remove("active");
+        currentUpdateData = null;
+      }
+
+      async function checkForUpdates(manualCheck = true) {
+        const checkBtn = document.getElementById("checkUpdateBtn");
+        const badge = document.getElementById("updateBadge");
+        const originalHTML = checkBtn.innerHTML;
+
+        checkBtn.classList.add("loading");
+        checkBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+        checkBtn.disabled = true;
+
+        try {
+          const response = await fetch(`${UPDATE_JSON_URL}?t=${Date.now()}`);
+          if (!response.ok) throw new Error("Failed to fetch update info");
+
+          const updateData = await response.json();
+
+          if (isNewerVersion(updateData.version, CURRENT_VERSION)) {
+            badge.classList.add("show");
+            toastManager.show(
+              `New version available: ${updateData.version}!`,
+              "info",
+            );
+
+            showUpdatePopup(updateData);
+          } else if (manualCheck) {
+            toastManager.show("You're using the latest version!", "success");
+          }
+        } catch (error) {
+          if (manualCheck) {
+            toastManager.show(
+              `Couldn't check for updates. Error: ${error.message}`,
+              "warning",
+            );
+          }
+        } finally {
+          checkBtn.innerHTML = originalHTML;
+          checkBtn.disabled = false;
+          checkBtn.classList.remove("loading");
+        }
+      }
+
+      function isNewerVersion(newVer, currentVer) {
+        const newParts = newVer.split(".").map(Number);
+        const currParts = currentVer.split(".").map(Number);
+
+        for (let i = 0; i < Math.max(newParts.length, currParts.length); i++) {
+          const newP = newParts[i] || 0;
+          const currP = currParts[i] || 0;
+          if (newP > currP) return true;
+          if (newP < currP) return false;
+        }
+        return false;
+      }
+
+      window.addEventListener("load", () => {
+        updatePopup = document.querySelector(".update-popup");
+        updatePopupClose = document.getElementById("updatePopupClose");
+        updateVersionEl = document.getElementById("updateVersion");
+        updateChangesEl = document.getElementById("updateChanges");
+        updateLaterBtn = document.getElementById("updateLaterBtn");
+        updateDownloadBtn = document.getElementById("updateDownloadBtn");
+        closeBtn = document.querySelectorAll(
+          ".guide-popup .close-btn, .vehicles-popup .close-btn, .library-popup .close-btn, .update-popup .close-btn",
+        );
+
+        closeBtn.forEach((e) => {
+          e.addEventListener("click", () => {
+            const popup = e.closest(
+              ".guide-popup, .vehicles-popup, .library-popup, .update-popup",
+            );
+            if (popup === updatePopup) {
+              hideUpdatePopup();
+            } else {
+              showPopup(popup, false);
+            }
+          });
+        });
+
+        updateLaterBtn.addEventListener("click", hideUpdatePopup);
+        updateDownloadBtn.addEventListener("click", () => {
+          if (currentUpdateData) {
+            window.open(currentUpdateData.downloadUrl, "_blank");
+            hideUpdatePopup();
+          }
+        });
+
+        checkForUpdates(false);
+      });
+
+      class ToastManager {
+        constructor() {
+          ((this.queue = []),
+            (this.active = []),
+            (this.maxVisible = 3),
+            (this.container = this.createContainer()),
+            (this.position = "bottom-center"),
+            this.updatePosition());
+        }
+        createContainer() {
+          let e = document.querySelector(".toast-container");
+          return (
+            e ||
+              ((e = document.createElement("div")),
+              (e.className = "toast-container"),
+              e.setAttribute("aria-live", "polite"),
+              e.setAttribute("role", "region"),
+              e.setAttribute("aria-label", "Notifications"),
+              document.body.appendChild(e)),
+            e
+          );
+        }
+        updatePosition() {
+          this.container.className = `toast-container ${this.position}`;
+        }
+        setPosition(e) {
+          [
+            "bottom-center",
+            "bottom-left",
+            "top-center",
+            "top-right",
+            "bottom-right",
+          ].includes(e) && ((this.position = e), this.updatePosition());
+        }
+        show(e, a = "info", t = null) {
+          const o = {
+            message: e,
+            type: a,
+            duration: t || this.getDefaultDuration(a),
+            id: Date.now() + Math.random(),
+          };
+          ("error" === a ? this.queue.unshift(o) : this.queue.push(o),
+            this.processQueue());
+        }
+        getDefaultDuration(e) {
+          return (
+            { success: 2500, info: 3e3, warning: 4e3, error: 6e3 }[e] || 3e3
+          );
+        }
+        processQueue() {
+          if (this.active.length >= this.maxVisible || 0 === this.queue.length)
+            return;
+          const e = this.queue.shift(),
+            a = this.createToastElement(e);
+          (this.container.appendChild(a),
+            this.active.push(e),
+            requestAnimationFrame(() => a.classList.add("show")),
+            (e.timeout = setTimeout(() => this.dismiss(e.id), e.duration)),
+            setTimeout(() => this.processQueue(), 100));
+        }
+        createToastElement(e) {
+          const a = document.createElement("div");
+          ((a.className = `toast-item ${e.type}`),
+            a.setAttribute("role", "alert"),
+            a.setAttribute("aria-live", "assertive"),
+            (a.dataset.id = e.id));
+          return (
+            (a.innerHTML = `\n      <i class="fas ${
+              {
+                success: "fa-check-circle",
+                error: "fa-exclamation-circle",
+                warning: "fa-exclamation-triangle",
+                info: "fa-info-circle",
+              }[e.type]
+            } toast-icon"></i>\n      <span class="toast-message">${
+              e.message
+            }</span>\n      <button class="toast-close" aria-label="Close notification">\n        <i class="fas fa-times"></i>\n      </button>\n    `),
+            (a.querySelector(".toast-close").onclick = (a) => {
+              (a.stopPropagation(), this.dismiss(e.id));
+            }),
+            a
+          );
+        }
+        dismiss(e) {
+          const a = this.active.findIndex((a) => a.id === e);
+          if (-1 === a) return;
+          const t = this.active[a];
+          clearTimeout(t.timeout);
+          const o = this.container.querySelector(`[data-id="${e}"]`);
+          (o &&
+            (o.classList.remove("show"),
+            o.classList.add("hide"),
+            o.addEventListener(
+              "transitionend",
+              () => {
+                o.parentNode && o.remove();
+              },
+              { once: !0 },
+            )),
+            this.active.splice(a, 1),
+            setTimeout(() => this.processQueue(), 350));
+        }
+        clearAll() {
+          ((this.queue = []), this.active.forEach((e) => this.dismiss(e.id)));
+        }
+      }
+      const toastManager = new ToastManager();
+      function escapeRegex(e) {
+        return e.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      }
+      toastManager.setPosition("top-right");
+      const fileInput = document.getElementById("file-upload"),
+        fileInputWrapper = document.querySelector(".file-input-wrapper"),
+        carSelect = document.getElementById("car-select"),
+        sizeSelect = document.getElementById("size-select"),
+        syncBtn = document.getElementById("sync-btn"),
+        maxSizeBtn = document.getElementById("max-size-btn"),
+        colorsContainer = document.getElementById("colors-grid"),
+        saveBtn = document.getElementById("save-btn"),
+        themeToggle = document.querySelector(".theme-toggle"),
+        guideBtn = document.getElementById("guideBtn"),
+        vehiclesBtn = document.getElementById("vehiclesBtn"),
+        libraryBtn = document.getElementById("libraryBtn"),
+        guidePopup = document.querySelector(".guide-popup"),
+        vehiclesPopup = document.querySelector(".vehicles-popup"),
+        libraryPopup = document.querySelector(".library-popup"),
+        vehicleSearch = document.getElementById("vehicle-search"),
+        vehicleList = document.getElementById("vehicle-list"),
+        libraryList = document.getElementById("library-list"),
+        copyVehicleBtn = document.getElementById("copy-vehicle-btn"),
+        pasteVehicleBtn = document.getElementById("paste-vehicle-btn"),
+        randomAllBtn = document.getElementById("random-all-btn"),
+        prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches,
+        savedTheme = localStorage.getItem("theme"),
+        isDark = "dark" === savedTheme || (!savedTheme && prefersDark);
+      setTheme(isDark);
+      const backdrop = document.querySelector(".backdrop");
+      let carColors = {},
+        originalText = "",
+        isSyncEnabled = !1,
+        modifiedVehicles = new Set(),
+        paletteClipboard = null,
+        vehicleClipboard = null,
+        library = JSON.parse(localStorage.getItem("colorLibrary") || "[]"),
+        proColorPicker = null,
+        proColorPickerState = {
+          isOpen: !1,
+          pointerMode: null,
+          dragPanel: !1,
+          dragOffsetX: 0,
+          dragOffsetY: 0,
+          targetInput: null,
+          sourceHex: "#ffffff",
+          h: 0,
+          s: 0,
+          v: 1,
+        };
+      const vehiclePairs = {
+        Musclecar_17: "Placeholder_09",
+        Placeholder_09: "Musclecar_17",
+        Musclecar_18: "Placeholder_10",
+        Placeholder_10: "Musclecar_18",
+        Musclecar_19: "Placeholder_08",
+        Placeholder_08: "Musclecar_19",
+        Truck_09: "Placeholder_11",
+        Placeholder_11: "Truck_09",
+        Unique_23: "Placeholder_07",
+        Placeholder_07: "Unique_23",
+        Unique_22: "Placeholder_06",
+        Placeholder_06: "Unique_22",
+        Unique_21: "Placeholder_05",
+        Placeholder_05: "Unique_21",
+        Supercar_20: "Placeholder_04",
+        Placeholder_04: "Supercar_20",
+        Supercar_19: "Placeholder_03",
+        Placeholder_03: "Supercar_19",
+        Supercar_18: "Placeholder_02",
+        Placeholder_02: "Supercar_18",
+        Supercar_17: "Placeholder_01",
+        Placeholder_01: "Supercar_17",
+      };
+      const debounce = (e, a) => {
+        let t;
+        return (...o) => {
+          clearTimeout(t);
+          t = setTimeout(() => e(...o), a);
+        };
+      };
+      const rgbToHex = (e, a, t) =>
+        `#${[e, a, t]
+          .map((e) =>
+            Math.round(255 * e)
+              .toString(16)
+              .padStart(2, "0"),
+          )
+          .join("")}`;
+      const hexToRgb = (e) =>
+        [1, 3, 5].map((a) => parseInt(e.slice(a, a + 2), 16) / 255);
+      const mixColors = (e, a) => [
+        (e[0] + a[0]) / 2,
+        (e[1] + a[1]) / 2,
+        (e[2] + a[2]) / 2,
+      ];
+      let previewFrame = null;
+      function updatePreview(e, a) {
+        const t = rgbToHex(...a.lacquer),
+          o = a.flake,
+          r = a.paint,
+          s = mixColors(o, r),
+          i = rgbToHex(...s),
+          l = e.querySelector(".preview").children;
+        ((l[0].style.background = t),
+          (l[1].style.background = `radial-gradient(circle, ${i}, ${t})`),
+          previewFrame ||
+            (previewFrame = requestAnimationFrame(() => {
+              previewFrame = null;
+            })));
+      }
+      function reorderColors(e, a, t) {
+        if (!carColors[e]) return !1;
+        const [o] = carColors[e].colors.splice(a, 1);
+        return (
+          !!o &&
+          (carColors[e].colors.splice(t, 0, o),
+          carColors[e].colors.forEach((e, a) => {
+            ((e.index = String(a).padStart(2, "0")),
+              (e.originalIndex = e.index));
+          }),
+          !0)
+        );
+      }
+      function deepCopyEntry(e) {
+        return {
+          index: e.index,
+          originalIndex: e.index,
+          paint: [...e.paint],
+          lacquer: [...e.lacquer],
+          flake: [...e.flake],
+          originalColors: {
+            paint: [...e.originalColors.paint],
+            lacquer: [...e.originalColors.lacquer],
+            flake: [...e.originalColors.flake],
+          },
+          originalLines: { ...e.originalLines },
+          originalValues: { ...e.originalValues },
+        };
+      }
+      function copyPaletteValues(e) {
+        return {
+          paint: [...e.paint],
+          lacquer: [...e.lacquer],
+          flake: [...e.flake],
+        };
+      }
+      function clamp(e, a, t) {
+        return Math.min(t, Math.max(a, e));
+      }
+      function hexToRgb255(e) {
+        const a = e.replace("#", "");
+        return /^[\da-fA-F]{6}$/.test(a)
+          ? [
+              parseInt(a.slice(0, 2), 16),
+              parseInt(a.slice(2, 4), 16),
+              parseInt(a.slice(4, 6), 16),
+            ]
+          : null;
+      }
+      function rgb255ToHex(e, a, t) {
+        return `#${[e, a, t]
+          .map((e) =>
+            Math.round(clamp(e, 0, 255))
+              .toString(16)
+              .padStart(2, "0"),
+          )
+          .join("")}`;
+      }
+      function rgb255ToHsv(e, a, t) {
+        const o = e / 255,
+          r = a / 255,
+          s = t / 255,
+          i = Math.max(o, r, s),
+          l = Math.min(o, r, s),
+          n = i - l;
+        let c = 0;
+        return (
+          0 !== n &&
+            (i === o
+              ? (c = 60 * (((r - s) / n) % 6))
+              : i === r
+                ? (c = 60 * ((s - o) / n + 2))
+                : (c = 60 * ((o - r) / n + 4))),
+          c < 0 && (c += 360),
+          [c, 0 === i ? 0 : n / i, i]
+        );
+      }
+      function hsvToRgb255(e, a, t) {
+        const o = t * a,
+          r = o * (1 - Math.abs(((e / 60) % 2) - 1)),
+          s = t - o;
+        let i = 0,
+          l = 0,
+          n = 0;
+        return (
+          e >= 0 && e < 60
+            ? ((i = o), (l = r), (n = 0))
+            : e >= 60 && e < 120
+              ? ((i = r), (l = o), (n = 0))
+              : e >= 120 && e < 180
+                ? ((i = 0), (l = o), (n = r))
+                : e >= 180 && e < 240
+                  ? ((i = 0), (l = r), (n = o))
+                  : e >= 240 && e < 300
+                    ? ((i = r), (l = 0), (n = o))
+                    : ((i = o), (l = 0), (n = r)),
+          [
+            Math.round(255 * (i + s)),
+            Math.round(255 * (l + s)),
+            Math.round(255 * (n + s)),
+          ]
+        );
+      }
+      function applySlotColorChange(e, a, t, o, r = null, s = !0) {
+        if (!carColors[e] || a >= carColors[e].colors.length) return;
+        const i = hexToRgb(o);
+        if (i.some((e) => isNaN(e))) return;
+        ((carColors[e].colors[a][t] = i), modifiedVehicles.add(e));
+        const l =
+          r || colorsContainer.querySelector(`.color-set[data-index="${a}"]`);
+        (l &&
+          (setSlotColorUI(l, t, o), updatePreview(l, carColors[e].colors[a])),
+          syncPartner(e, s, s));
+      }
+      function setSlotColorUI(e, a, t) {
+        const o = e.querySelector(`.color-native-input[data-type="${a}"]`),
+          r = e.querySelector(`.color-trigger[data-type="${a}"]`);
+        (o && (o.value = t), r && (r.style.background = t));
+      }
+      function createProColorPicker() {
+        const e = document.createElement("div");
+        ((e.className = "pro-color-picker"),
+          (e.innerHTML = `\n    <div class="pro-picker-titlebar">\n      <span>Color Picker</span>\n    </div>\n    <div class="pro-picker-content">\n      <div class="pro-picker-main">\n        <div class="pro-picker-sv" aria-label="Saturation and brightness selector">\n          <div class="pro-picker-sv-cursor"></div>\n        </div>\n        <div class="pro-picker-hue" aria-label="Hue selector">\n          <div class="pro-picker-hue-cursor"></div>\n        </div>\n      </div>\n      <div class="pro-picker-side">\n        <div class="pro-picker-preview">\n          <div>\n            <span>New</span>\n            <div class="pro-picker-new"></div>\n          </div>\n          <div>\n            <span>Current</span>\n            <div class="pro-picker-current"></div>\n          </div>\n        </div>\n        <div class="pro-picker-rgb">\n          <label>R<input type="number" min="0" max="255" class="picker-r" /></label>\n          <label>G<input type="number" min="0" max="255" class="picker-g" /></label>\n          <label>B<input type="number" min="0" max="255" class="picker-b" /></label>\n        </div>\n        <label class="pro-picker-hex-label">HEX\n          <input type="text" maxlength="7" class="picker-hex" />\n        </label>\n        <button type="button" class="pro-picker-eyedropper" title="Eyedropper"><i class="fas fa-eye-dropper"></i></button>\n      </div>\n    </div>\n  `),
+          document.body.appendChild(e));
+        const a = {
+          root: e,
+          titlebar: e.querySelector(".pro-picker-titlebar"),
+          sv: e.querySelector(".pro-picker-sv"),
+          svCursor: e.querySelector(".pro-picker-sv-cursor"),
+          hue: e.querySelector(".pro-picker-hue"),
+          hueCursor: e.querySelector(".pro-picker-hue-cursor"),
+          newSwatch: e.querySelector(".pro-picker-new"),
+          currentSwatch: e.querySelector(".pro-picker-current"),
+          rInput: e.querySelector(".picker-r"),
+          gInput: e.querySelector(".picker-g"),
+          bInput: e.querySelector(".picker-b"),
+          hexInput: e.querySelector(".picker-hex"),
+          eyedropperBtn: e.querySelector(".pro-picker-eyedropper"),
+        };
+        return (
+          a.eyedropperBtn.addEventListener("click", async () => {
+            if (!window.EyeDropper) {
+              toastManager.show(
+                "Eyedropper not supported in your browser.",
+                "warning",
+              );
+              return;
+            }
+            const eyeDropper = new EyeDropper();
+            try {
+              const result = await eyeDropper.open();
+              const color = result.sRGBHex;
+              const rgb = hexToRgb255(color);
+              if (rgb) {
+                const [r, g, b] = rgb;
+                const [h, s, v] = rgb255ToHsv(r, g, b);
+                proColorPickerState.h = h;
+                proColorPickerState.s = s;
+                proColorPickerState.v = v;
+                renderProColorPicker(true, true);
+              }
+            } catch (e) {}
+          }),
+          a.titlebar.addEventListener("pointerdown", (e) => {
+            (e.preventDefault(), startProPickerPanelDrag(e));
+          }),
+          a.sv.addEventListener("pointerdown", (e) => {
+            (e.preventDefault(), startProPickerDrag("sv", e));
+          }),
+          a.hue.addEventListener("pointerdown", (e) => {
+            (e.preventDefault(), startProPickerDrag("hue", e));
+          }),
+          [a.rInput, a.gInput, a.bInput].forEach((e) => {
+            e.addEventListener("input", () => {
+              const t = clamp(parseInt(a.rInput.value) || 0, 0, 255),
+                o = clamp(parseInt(a.gInput.value) || 0, 0, 255),
+                r = clamp(parseInt(a.bInput.value) || 0, 0, 255),
+                [s, i, l] = rgb255ToHsv(t, o, r);
+              ((proColorPickerState.h = s),
+                (proColorPickerState.s = i),
+                (proColorPickerState.v = l),
+                renderProColorPicker(!0, !1));
+            });
+          }),
+          a.hexInput.addEventListener("input", () => {
+            let e = a.hexInput.value.trim();
+            e.startsWith("#") || (e = `#${e}`);
+            const t = hexToRgb255(e);
+            if (!t) return;
+            const [o, r, s] = t,
+              [i, l, n] = rgb255ToHsv(o, r, s);
+            ((proColorPickerState.h = i),
+              (proColorPickerState.s = l),
+              (proColorPickerState.v = n),
+              renderProColorPicker(!0, !1));
+          }),
+          a
+        );
+      }
+      function positionProColorPicker(e, a) {
+        if (!proColorPicker) return;
+        const t = window.innerWidth,
+          o = window.innerHeight,
+          r = proColorPicker.root.offsetWidth || 420,
+          s = proColorPicker.root.offsetHeight || 300,
+          i = clamp(e + 14, 12, t - r - 12),
+          l = clamp(a + 14, 12, o - s - 12);
+        ((proColorPicker.root.style.left = `${i}px`),
+          (proColorPicker.root.style.top = `${l}px`));
+      }
+      function renderProColorPicker(e = !1, a = !1) {
+        if (!proColorPicker) return;
+        const t = clamp(proColorPickerState.h, 0, 360),
+          o = clamp(proColorPickerState.s, 0, 1),
+          r = clamp(proColorPickerState.v, 0, 1),
+          [s, i, l] = hsvToRgb255(t, o, r),
+          n = rgb255ToHex(s, i, l),
+          [c, d, u] = hsvToRgb255(t, 1, 1);
+        ((proColorPickerState.h = t),
+          (proColorPickerState.s = o),
+          (proColorPickerState.v = r),
+          (proColorPicker.sv.style.background = `linear-gradient(to top, #000, transparent), linear-gradient(to right, #fff, ${rgb255ToHex(c, d, u)})`),
+          (proColorPicker.svCursor.style.left = `${100 * o}%`),
+          (proColorPicker.svCursor.style.top = `${100 * (1 - r)}%`),
+          (proColorPicker.hueCursor.style.top = `${(t / 360) * 100}%`),
+          (proColorPicker.newSwatch.style.background = n),
+          (proColorPicker.currentSwatch.style.background =
+            proColorPickerState.sourceHex),
+          (proColorPicker.rInput.value = s),
+          (proColorPicker.gInput.value = i),
+          (proColorPicker.bInput.value = l),
+          (proColorPicker.hexInput.value = n.toUpperCase()));
+        if (e && proColorPickerState.targetInput) {
+          const e = proColorPickerState.targetInput,
+            t = parseInt(e.dataset.index),
+            o = e.dataset.type,
+            r = carSelect.value,
+            s = e.closest(".color-set");
+          ((e.value = n), applySlotColorChange(r, t, o, n, s, a));
+        }
+      }
+      function updateProPickerFromPointer(e, a, t) {
+        if (!proColorPicker) return;
+        if ("sv" === e) {
+          const e = proColorPicker.sv.getBoundingClientRect(),
+            o = clamp((a - e.left) / e.width, 0, 1),
+            r = clamp((t - e.top) / e.height, 0, 1);
+          ((proColorPickerState.s = o), (proColorPickerState.v = 1 - r));
+        } else if ("hue" === e) {
+          const e = proColorPicker.hue.getBoundingClientRect(),
+            o = clamp((t - e.top) / e.height, 0, 1);
+          proColorPickerState.h = 360 * o;
+        }
+        renderProColorPicker(!0, !1);
+      }
+      function stopProPickerDrag() {
+        (document.removeEventListener(
+          "pointermove",
+          handleProPickerPointerMove,
+        ),
+          (proColorPickerState.pointerMode = null));
+      }
+      function stopProPickerPanelDrag() {
+        (document.removeEventListener("pointermove", handleProPickerPanelMove),
+          (proColorPickerState.dragPanel = !1));
+      }
+      function handleProPickerPanelMove(e) {
+        if (!proColorPicker || !proColorPickerState.dragPanel) return;
+        const a = window.innerWidth,
+          t = window.innerHeight,
+          o = proColorPicker.root.offsetWidth || 420,
+          r = proColorPicker.root.offsetHeight || 300,
+          s = clamp(
+            e.clientX - proColorPickerState.dragOffsetX,
+            12,
+            a - o - 12,
+          ),
+          i = clamp(
+            e.clientY - proColorPickerState.dragOffsetY,
+            12,
+            t - r - 12,
+          );
+        ((proColorPicker.root.style.left = `${s}px`),
+          (proColorPicker.root.style.top = `${i}px`));
+      }
+      function startProPickerPanelDrag(e) {
+        if (!proColorPicker) return;
+        const a = proColorPicker.root.getBoundingClientRect();
+        ((proColorPickerState.dragPanel = !0),
+          (proColorPickerState.dragOffsetX = e.clientX - a.left),
+          (proColorPickerState.dragOffsetY = e.clientY - a.top),
+          document.addEventListener("pointermove", handleProPickerPanelMove),
+          document.addEventListener(
+            "pointerup",
+            () => {
+              stopProPickerPanelDrag();
+            },
+            { once: !0 },
+          ));
+      }
+      function handleProPickerPointerMove(e) {
+        proColorPickerState.pointerMode &&
+          updateProPickerFromPointer(
+            proColorPickerState.pointerMode,
+            e.clientX,
+            e.clientY,
+          );
+      }
+      function startProPickerDrag(e, a) {
+        ((proColorPickerState.pointerMode = e),
+          updateProPickerFromPointer(e, a.clientX, a.clientY),
+          document.addEventListener("pointermove", handleProPickerPointerMove),
+          document.addEventListener(
+            "pointerup",
+            () => {
+              (proColorPickerState.targetInput && renderProColorPicker(!0, !0),
+                stopProPickerDrag());
+            },
+            { once: !0 },
+          ));
+      }
+      function openProColorPicker(e, a, t) {
+        if (!e) return;
+        proColorPicker || (proColorPicker = createProColorPicker());
+        const o = hexToRgb255(e.value) || [255, 255, 255],
+          [r, s, i] = rgb255ToHsv(o[0], o[1], o[2]);
+        ((proColorPickerState.isOpen = !0),
+          (proColorPickerState.targetInput = e),
+          (proColorPickerState.sourceHex = e.value),
+          (proColorPickerState.h = r),
+          (proColorPickerState.s = s),
+          (proColorPickerState.v = i),
+          proColorPicker.root.classList.add("active"),
+          positionProColorPicker(a, t),
+          renderProColorPicker(!1, !1));
+      }
+      function closeProColorPicker(e = !1) {
+        proColorPicker &&
+          (proColorPicker.root.classList.remove("active"),
+          e && proColorPickerState.targetInput && renderProColorPicker(!0, !0),
+          stopProPickerDrag(),
+          stopProPickerPanelDrag(),
+          (proColorPickerState.isOpen = !1),
+          (proColorPickerState.targetInput = null));
+      }
+
+      function updateLibrary() {
+        localStorage.setItem("colorLibrary", JSON.stringify(library));
+        renderLibrary();
+      }
+
+      function renderLibrary() {
+        if (!libraryList) return;
+        if (library.length === 0) {
+          libraryList.innerHTML =
+            '<div class="empty-library">Your library is empty. Save a palette from a vehicle slot!</div>';
+          return;
+        }
+
+        libraryList.innerHTML = library
+          .map((item, index) => {
+            const paintHex = rgbToHex(...item.paint);
+            const lacquerHex = rgbToHex(...item.lacquer);
+            const flakeHex = rgbToHex(...item.flake);
+            const previewMix = mixColors(item.flake, item.paint);
+            const mixHex = rgbToHex(...previewMix);
+
+            return `
+          <div class="library-item">
+            <div class="library-item-preview">
+              <div style="background: ${lacquerHex}; width: 100%; height: 100%; position: absolute;"></div>
+              <div style="background: radial-gradient(circle, ${mixHex}, ${lacquerHex}); width: 100%; height: 100%; position: absolute;"></div>
+            </div>
+            <div class="library-item-name" title="${item.name}">${item.name}</div>
+            <div class="library-item-actions">
+              <button class="library-item-btn apply-preset-btn" data-index="${index}" title="Apply to current selection">Apply</button>
+              <button class="library-item-btn delete-preset-btn" data-index="${index}" title="Delete" style="background: var(--error); color: white;">×</button>
+            </div>
+          </div>
+        `;
+          })
+          .join("");
+
+        libraryList.querySelectorAll(".apply-preset-btn").forEach((btn) => {
+          btn.onclick = (e) => {
+            e.stopPropagation();
+            const index = parseInt(btn.dataset.index);
+            const car = carSelect.value;
+            if (!car) {
+              toastManager.show("Select a car first!", "warning");
+              return;
+            }
+            toastManager.show("Select a slot to apply", "info");
+            paletteClipboard = { ...library[index], sourceVehicle: "Library" };
+            showColors(car);
+            showPopup(libraryPopup, false);
+          };
+        });
+
+        libraryList.querySelectorAll(".delete-preset-btn").forEach((btn) => {
+          btn.onclick = (e) => {
+            e.stopPropagation();
+            const index = parseInt(btn.dataset.index);
+            library.splice(index, 1);
+            updateLibrary();
+          };
+        });
+      }
+
+      function generateSmartPalette() {
+        const style = Math.random();
+        let hue = Math.random() * 360;
+        let sFlake, vFlake, sPaint, vPaint, sLacquer, vLacquer;
+        let huePaint = hue;
+
+        if (style < 0.2) {
+          sFlake = Math.random() * 0.05;
+          vFlake = 0.05 + Math.random() * 0.9;
+          sPaint = sFlake;
+          vPaint = vFlake > 0.5 ? vFlake - 0.15 : vFlake + 0.15;
+          sLacquer = 0;
+          vLacquer = Math.min(1, vFlake + 0.1);
+        } else if (style < 0.4) {
+          sFlake = 0.3 + Math.random() * 0.4;
+          vFlake = 0.6 + Math.random() * 0.3;
+          huePaint = (hue + 20) % 360;
+          sPaint = sFlake + 0.2;
+          vPaint = vFlake - 0.2;
+          sLacquer = sFlake;
+          vLacquer = 1;
+        } else if (style < 0.6) {
+          sFlake = 0.7 + Math.random() * 0.3;
+          vFlake = 0.2 + Math.random() * 0.3;
+          sPaint = sFlake - 0.2;
+          vPaint = vFlake + 0.3;
+          sLacquer = 1;
+          vLacquer = vFlake + 0.1;
+        } else if (style < 0.8) {
+          sFlake = 0.8 + Math.random() * 0.2;
+          vFlake = 0.7 + Math.random() * 0.3;
+          sPaint = sFlake;
+          vPaint = vFlake - 0.2;
+          sLacquer = sFlake;
+          vLacquer = vFlake;
+        } else {
+          sFlake = 0.4 + Math.random() * 0.3;
+          vFlake = 0.3 + Math.random() * 0.4;
+          sPaint = sFlake + 0.1;
+          vPaint = vFlake - 0.1;
+          sLacquer = 0.1;
+        }
+
+        const clamp = (val) => Math.min(1, Math.max(0, val));
+
+        const flake = hsvToRgb255(hue, clamp(sFlake), clamp(vFlake)).map(
+          (v) => v / 255,
+        );
+        const paint = hsvToRgb255(huePaint, clamp(sPaint), clamp(vPaint)).map(
+          (v) => v / 255,
+        );
+        const lacquer = hsvToRgb255(hue, clamp(sLacquer), clamp(vLacquer)).map(
+          (v) => v / 255,
+        );
+
+        return { paint, lacquer, flake };
+      }
+
+      function applySmartRandomToSlot(car, index, container) {
+        if (!carColors[car] || index >= carColors[car].colors.length) return;
+        const palette = generateSmartPalette();
+        const slot = carColors[car].colors[index];
+
+        slot.paint = palette.paint;
+        slot.lacquer = palette.lacquer;
+        slot.flake = palette.flake;
+
+        modifiedVehicles.add(car);
+
+        if (container) {
+          setSlotColorUI(container, "paint", rgbToHex(...slot.paint));
+          setSlotColorUI(container, "lacquer", rgbToHex(...slot.lacquer));
+          setSlotColorUI(container, "flake", rgbToHex(...slot.flake));
+          updatePreview(container, slot);
+        }
+        syncPartner(car);
+      }
+
+      function syncPartner(e, a = !0, t = !0) {
+        const o = vehiclePairs[e];
+        o &&
+          carColors[o] &&
+          isSyncEnabled &&
+          a &&
+          ((carColors[o].size = carColors[e].size),
+          (carColors[o].colors = carColors[e].colors.map(deepCopyEntry)),
+          modifiedVehicles.add(o),
+          carSelect.value === o && showColors(o));
+      }
+      function filterVehicles(e) {
+        vehicleList.querySelectorAll("li").forEach((a) => {
+          const t = a.textContent.toLowerCase();
+          a.style.display = t.includes(e.toLowerCase()) ? "" : "none";
+        });
+      }
+      vehicleSearch.addEventListener(
+        "input",
+        debounce((e) => {
+          filterVehicles(e.target.value);
+        }, 300),
+      );
+      let scrollBtn = document.createElement("button");
+      function parseFile(e) {
+        if (e.length > 1e7) throw new Error("File is too large to process.");
+        if ("string" != typeof e || "" === e.trim())
+          throw new Error("Empty or invalid file content.");
+        if (!e.includes("/Vehicles/ColorPalettes/"))
+          throw new Error(
+            "Invalid file format: Missing /Vehicles/ColorPalettes/ section.",
+          );
+        const a = [
+            ...e.matchAll(
+              /\/Vehicles\/ColorPalettes\/([\w]+)\/(\d+):([\s\S]*?)(?=(\/Vehicles\/ColorPalettes\/|$))/gi,
+            ),
+          ],
+          t = {};
+        let o = 0,
+          r = 0;
+        const s = [
+            ...e.matchAll(
+              /\/Vehicles\/ColorPalettes\/([\w]+):\s*(?:Size\s*=\s*(\d+))?/gi,
+            ),
+          ],
+          i = {};
+        for (const [, e, a] of s) i[e] = a ? parseInt(a) : 9;
+        for (const [, e, s, l] of a) {
+          (r++, t[e] || (t[e] = { size: i[e] || 9, colors: [] }));
+          const a = (e) =>
+              l.match(
+                new RegExp(`('${e}'\\s*=\\s*([\\d.]+)\\s*\\([^)]+\\))`, "i"),
+              ),
+            n = ["Paint Color_r", "Paint Color_g", "Paint Color_b"].map(a),
+            c = ["Lacquer Color_r", "Lacquer Color_g", "Lacquer Color_b"].map(
+              a,
+            ),
+            d = ["Flake Color_r", "Flake Color_g", "Flake Color_b"].map(a);
+          if ([...n, ...c, ...d].some((e) => !e)) {
+            (console.warn(`Invalid entry for ${e}/${s}: Missing color data.`),
+              o++);
+            continue;
+          }
+          const u = {
+            originalIndex: s,
+            index: s.padStart(2, "0"),
+            paint: n.map((e) => parseFloat(e[2])),
+            lacquer: c.map((e) => parseFloat(e[2])),
+            flake: d.map((e) => parseFloat(e[2])),
+            originalColors: {
+              paint: n.map((e) => parseFloat(e[2])),
+              lacquer: c.map((e) => parseFloat(e[2])),
+              flake: d.map((e) => parseFloat(e[2])),
+            },
+            originalLines: {
+              paint_r: n[0][1],
+              paint_g: n[1][1],
+              paint_b: n[2][1],
+              lacquer_r: c[0][1],
+              lacquer_g: c[1][1],
+              lacquer_b: c[2][1],
+              flake_r: d[0][1],
+              flake_g: d[1][1],
+              flake_b: d[2][1],
+            },
+            originalValues: {
+              paint_r: n[0][2],
+              paint_g: n[1][2],
+              paint_b: n[2][2],
+              lacquer_r: c[0][2],
+              lacquer_g: c[1][2],
+              lacquer_b: c[2][2],
+              flake_r: d[0][2],
+              flake_g: d[1][2],
+              flake_b: d[2][2],
+            },
+          };
+          [...u.paint, ...u.lacquer, ...u.flake].some(
+            (e) => isNaN(e) || e < 0 || e > 1,
+          )
+            ? (console.warn(`Invalid RGB values for ${e}/${s}: Must be 0-1.`),
+              o++)
+            : t[e].colors.push(u);
+        }
+        if (0 === r) throw new Error("No vehicle color palettes found.");
+        return (o > 0 && console.warn(`Skipped ${o} invalid entries.`), t);
+      }
+      function handleFileSelect(e) {
+        if (!e) return void toastManager.show("No file selected!", "error");
+        const a = new FileReader();
+        ((a.onerror = () => {
+          (toastManager.show("Failed to read file! Please try again.", "error"),
+            (saveBtn.disabled = !1));
+        }),
+          (a.onload = (e) => {
+            originalText = e.target.result;
+            try {
+              ((carColors = parseFile(originalText)), modifiedVehicles.clear());
+              const e = Object.keys(carColors);
+              if (0 === e.length)
+                return (
+                  (colorsContainer.innerHTML =
+                    '<div class="error">No valid vehicles found! Check file format and RGB values (0-1).</div>'),
+                  (carSelect.innerHTML =
+                    '<option value="">Select a car</option>'),
+                  (sizeSelect.value = ""),
+                  (sizeSelect.disabled = !0),
+                  (syncBtn.disabled = !0),
+                  (maxSizeBtn.disabled = !0),
+                  (saveBtn.disabled = !0),
+                  void toastManager.show("No valid vehicles found!", "error")
+                );
+              ((carSelect.innerHTML =
+                '<option value="">Select a car</option>' +
+                e.map((e) => `<option value="${e}">${e}</option>`).join("")),
+                (colorsContainer.innerHTML = ""),
+                (sizeSelect.value = ""),
+                (sizeSelect.disabled = !0),
+                (syncBtn.disabled = !0),
+                (maxSizeBtn.disabled = !0),
+                (saveBtn.disabled = !0),
+                toastManager.show("File loaded successfully!", "success"));
+            } catch (e) {
+              ((colorsContainer.innerHTML = `<div class="error">Error parsing file: ${e.message}</div>`),
+                (carSelect.innerHTML =
+                  '<option value="">Select a car</option>'),
+                (sizeSelect.value = ""),
+                (sizeSelect.disabled = !0),
+                (syncBtn.disabled = !0),
+                (maxSizeBtn.disabled = !0),
+                (saveBtn.disabled = !0),
+                toastManager.show(`Error: ${e.message}`, "error"));
+            }
+          }),
+          a.readAsText(e));
+      }
+      function showColors(e) {
+        if (
+          ((colorsContainer.innerHTML = ""),
+          (sizeSelect.disabled = !e || !carColors[e]),
+          (syncBtn.disabled = !e || !vehiclePairs[e]),
+          (maxSizeBtn.disabled =
+            !carColors || 0 === Object.keys(carColors).length),
+          !e || !carColors[e])
+        )
+          return void (sizeSelect.value = "");
+        const a = carColors[e]?.size || 9;
+        sizeSelect.value = a;
+        const t = carColors[e].colors
+          .sort((e, a) => parseInt(e.index) - parseInt(a.index))
+          .slice(0, a);
+        if (0 === t.length)
+          return (
+            (colorsContainer.innerHTML = `<div class="error">No colors available for ${e} within Size limit (${a}).</div>`),
+            void (saveBtn.disabled = !0)
+          );
+        (t.forEach((e, a) => {
+          const t = rgbToHex(...e.paint),
+            o = rgbToHex(...e.lacquer),
+            r = rgbToHex(...e.flake),
+            s = document.createElement("div");
+          ((s.className = "color-set"),
+            (s.dataset.index = a),
+            (s.innerHTML = `\n      <div class="color-set-header">\n        <strong>Color #${
+              e.index
+            }</strong>\n        <div style="display: flex; gap: 0.5rem; align-items: center;">\n          <button class="random-slot-btn" data-index="${a}" title="Smart Randomize Slot" style="background:none; border:none; color:inherit; cursor:pointer; padding: 0.2rem; font-size: 0.9rem; opacity: 0.7; transition: opacity 0.2s;"><i class="fas fa-dice"></i></button>\n          <i class="fas fa-grip-vertical drag-handle" title="Drag to move"></i>\n        </div>\n      </div>\n      <div class="slot-actions">\n        <button class="slot-action-btn copy-slot-btn" data-index="${a}" aria-label="Copy full palette ${
+              e.index
+            }">\n          <i class="fas fa-copy"></i> Copy\n        </button>\n        <button class="slot-action-btn paste-slot-btn" data-index="${a}" ${
+              paletteClipboard ? "" : "disabled"
+            } aria-label="Paste full palette into ${
+              e.index
+            }">\n          <i class="fas fa-paste"></i> Paste\n        </button>\n      </div>\n      <div class="slot-actions" style="margin-top: -0.3rem;">\n        <button class="slot-action-btn save-library-btn" data-index="${a}" aria-label="Save to Library">\n          <i class="fas fa-plus"></i> Library\n        </button>\n      </div>\n      <div class="color-row">\n        <button type="button" class="color-trigger" data-index="${a}" data-type="paint" style="background:${t}" aria-label="Paint color ${
+              e.index
+            }"></button>\n        <input type="color" class="color-native-input" data-index="${a}" data-type="paint" value="${t}" tabindex="-1" aria-hidden="true">\n        <span>Paint</span>\n        <button class="reset-btn" data-index="${a}" data-type="paint" aria-label="Reset paint color"><i class="fas fa-undo-alt"></i></button>\n      </div>\n      <div class="color-row">\n        <button type="button" class="color-trigger" data-index="${a}" data-type="lacquer" style="background:${o}" aria-label="Lacquer color ${
+              e.index
+            }"></button>\n        <input type="color" class="color-native-input" data-index="${a}" data-type="lacquer" value="${o}" tabindex="-1" aria-hidden="true">\n        <span>Lacquer</span>\n        <button class="reset-btn" data-index="${a}" data-type="lacquer" aria-label="Reset lacquer color"><i class="fas fa-undo-alt"></i></button>\n      </div>\n      <div class="color-row">\n        <button type="button" class="color-trigger" data-index="${a}" data-type="flake" style="background:${r}" aria-label="Flake color ${
+              e.index
+            }"></button>\n        <input type="color" class="color-native-input" data-index="${a}" data-type="flake" value="${r}" tabindex="-1" aria-hidden="true">\n        <span>Flake</span>\n        <button class="reset-btn" data-index="${a}" data-type="flake" aria-label="Reset flake color"><i class="fas fa-undo-alt"></i></button>\n      </div>\n      <div class="preview">\n        <div></div>\n        <div></div>\n      </div>\n    `),
+            colorsContainer.appendChild(s),
+            updatePreview(s, e));
+        }),
+          (saveBtn.disabled = !1));
+        const o = colorsContainer.querySelectorAll(".color-set");
+        o.forEach((e) => {
+          const a = e.querySelector(".drag-handle");
+          ((a.draggable = !0),
+            a.addEventListener("dragstart", (a) => {
+              (e.classList.add("dragging"),
+                a.dataTransfer.setData("text/plain", e.dataset.index),
+                colorsContainer.classList.add("drag-active"));
+            }),
+            a.addEventListener("dragend", () => {
+              (e.classList.remove("dragging"),
+                colorsContainer.classList.remove("drag-active"),
+                o.forEach((e) => e.classList.remove("drag-over")));
+            }),
+            e.addEventListener("dragover", (a) => {
+              (a.preventDefault(), e.classList.add("drag-over"));
+            }),
+            e.addEventListener("dragleave", () => {
+              e.classList.remove("drag-over");
+            }),
+            e.addEventListener("drop", (a) => {
+              (a.preventDefault(), e.classList.remove("drag-over"));
+              const t = parseInt(a.dataTransfer.getData("text/plain")),
+                o = parseInt(e.dataset.index),
+                r = carSelect.value;
+              isNaN(t) ||
+                isNaN(o) ||
+                t === o ||
+                (reorderColors(r, t, o)
+                  ? (modifiedVehicles.add(r),
+                    (colorsContainer.innerHTML = ""),
+                    showColors(r),
+                    syncPartner(r))
+                  : toastManager.show(
+                      "Error: Invalid drag operation!",
+                      "error",
+                    ));
+            }));
+        });
+      }
+      function setTheme(e) {
+        document.body.classList.toggle("dark", e);
+        const a = themeToggle.querySelector("i");
+        e
+          ? (a.classList.remove("fa-sun"), a.classList.add("fa-moon"))
+          : (a.classList.remove("fa-moon"), a.classList.add("fa-sun"));
+      }
+      function showPopup(e, a) {
+        (e.classList.toggle("active", a),
+          backdrop.classList.toggle("active", a));
+      }
+      ((scrollBtn.innerHTML = '<i class="fas fa-chevron-up"></i>'),
+        (scrollBtn.className = "scroll-top-btn"),
+        (scrollBtn.title = "Back to top"),
+        (scrollBtn.onclick = () =>
+          window.scrollTo({ top: 0, behavior: "smooth" })),
+        document.body.appendChild(scrollBtn),
+        window.addEventListener(
+          "scroll",
+          () => {
+            scrollBtn.style.display = window.scrollY > 750 ? "block" : "none";
+          },
+          { passive: !0 },
+        ),
+        fileInput.addEventListener("change", (e) =>
+          handleFileSelect(e.target.files[0]),
+        ),
+        fileInputWrapper.addEventListener("dragover", (e) => {
+          (e.preventDefault(), fileInputWrapper.classList.add("dragover"));
+        }),
+        fileInputWrapper.addEventListener("dragleave", (e) => {
+          (e.preventDefault(), fileInputWrapper.classList.remove("dragover"));
+        }),
+        fileInputWrapper.addEventListener("drop", (e) => {
+          (e.preventDefault(),
+            fileInputWrapper.classList.remove("dragover"),
+            handleFileSelect(e.dataTransfer.files[0]));
+        }),
+        colorsContainer.addEventListener(
+          "input",
+          debounce((e) => {
+            if (e.target.matches('input[type="color"]')) {
+              const a = parseInt(e.target.dataset.index),
+                t = e.target.dataset.type,
+                o = e.target.value,
+                l = carSelect.value;
+              applySlotColorChange(l, a, t, o, e.target.closest(".color-set"));
+            }
+          }, 100),
+        ),
+        colorsContainer.addEventListener("click", (e) => {
+          const randomSlotBtn = e.target.closest(".random-slot-btn");
+          if (randomSlotBtn) {
+            const index = parseInt(randomSlotBtn.dataset.index);
+            const car = carSelect.value;
+            const container = randomSlotBtn.closest(".color-set");
+            applySmartRandomToSlot(car, index, container);
+            return;
+          }
+          const a = e.target.closest(".copy-slot-btn");
+          if (a) {
+            const e = parseInt(a.dataset.index),
+              t = carSelect.value;
+            if (!carColors[t] || e >= carColors[t].colors.length) return;
+            const o = carColors[t].colors[e];
+            ((paletteClipboard = {
+              sourceVehicle: t,
+              sourceIndex: o.index,
+              ...copyPaletteValues(o),
+            }),
+              showColors(t));
+            return;
+          }
+          const libraryBtn = e.target.closest(".save-library-btn");
+          if (libraryBtn) {
+            const e = parseInt(libraryBtn.dataset.index),
+              t = carSelect.value;
+            if (!carColors[t] || e >= carColors[t].colors.length) return;
+            const o = carColors[t].colors[e];
+            const name = prompt(
+              "Enter a name for this preset:",
+              `${t} - ${o.index}`,
+            );
+            if (name) {
+              library.push({
+                name: name,
+                ...copyPaletteValues(o),
+              });
+              updateLibrary();
+              toastManager.show("Saved to library", "success");
+            }
+            return;
+          }
+          const t = e.target.closest(".paste-slot-btn");
+          if (t) {
+            if (!paletteClipboard)
+              return void toastManager.show("Copy a slot first!", "warning");
+            const e = parseInt(t.dataset.index),
+              a = carSelect.value;
+            if (!carColors[a] || e >= carColors[a].colors.length) return;
+            const o = carColors[a].colors[e],
+              r = t.closest(".color-set");
+            ((o.paint = [...paletteClipboard.paint]),
+              (o.lacquer = [...paletteClipboard.lacquer]),
+              (o.flake = [...paletteClipboard.flake]),
+              modifiedVehicles.add(a));
+            const s = r.querySelector(
+                'input.color-native-input[data-type="paint"]',
+              ),
+              i = r.querySelector(
+                'input.color-native-input[data-type="lacquer"]',
+              ),
+              l = r.querySelector(
+                'input.color-native-input[data-type="flake"]',
+              );
+            ((s.value = rgbToHex(...o.paint)),
+              (i.value = rgbToHex(...o.lacquer)),
+              (l.value = rgbToHex(...o.flake)),
+              setSlotColorUI(r, "paint", s.value),
+              setSlotColorUI(r, "lacquer", i.value),
+              setSlotColorUI(r, "flake", l.value),
+              updatePreview(r, o),
+              syncPartner(a));
+            return;
+          }
+          if (
+            e.target.matches(".reset-btn") ||
+            e.target.closest(".reset-btn")
+          ) {
+            const a = e.target.closest(".reset-btn"),
+              t = parseInt(a.dataset.index),
+              o = a.dataset.type,
+              r = carSelect.value;
+            if (!carColors[r] || t >= carColors[r].colors.length) return;
+            const s = carColors[r].colors[t],
+              i = a.closest(".color-set"),
+              l = i.querySelector(`input.color-native-input[data-type="${o}"]`),
+              n = s.originalColors[o];
+            ((l.value = rgbToHex(...n)),
+              setSlotColorUI(i, o, l.value),
+              (s[o] = [...n]),
+              modifiedVehicles.add(r),
+              updatePreview(i, s),
+              syncPartner(r));
+          }
+        }),
+        carSelect.addEventListener("change", (e) => {
+          const a = e.target.value;
+          (showColors(a),
+            (syncBtn.disabled = !a || !vehiclePairs[a]),
+            (copyVehicleBtn.disabled = !a || !carColors[a]),
+            (randomAllBtn.disabled = !a || !carColors[a]),
+            (pasteVehicleBtn.disabled =
+              !a || !carColors[a] || !vehicleClipboard),
+            (maxSizeBtn.disabled =
+              !carColors || 0 === Object.keys(carColors).length),
+            vehiclePairs[a] ||
+              ((isSyncEnabled = !1), syncBtn.classList.remove("active")));
+        }),
+        randomAllBtn.addEventListener("click", () => {
+          const car = carSelect.value;
+          if (!car || !carColors[car]) return;
+          if (confirm(`Randomize all colors for ${car}?`)) {
+            const sets = colorsContainer.querySelectorAll(".color-set");
+            sets.forEach((set, i) => {
+              applySmartRandomToSlot(car, i, set);
+            });
+          }
+        }),
+        copyVehicleBtn.addEventListener("click", () => {
+          const car = carSelect.value;
+          if (!car || !carColors[car]) return;
+          vehicleClipboard = {
+            size: carColors[car].size,
+            colors: carColors[car].colors.map(deepCopyEntry),
+          };
+          pasteVehicleBtn.disabled = false;
+        }),
+        pasteVehicleBtn.addEventListener("click", () => {
+          const car = carSelect.value;
+          if (!car || !carColors[car] || !vehicleClipboard) return;
+          if (
+            confirm(
+              `Paste all palettes into ${car}? This will overwrite current colors.`,
+            )
+          ) {
+            carColors[car].size = vehicleClipboard.size;
+            carColors[car].colors = vehicleClipboard.colors.map(deepCopyEntry);
+            modifiedVehicles.add(car);
+            showColors(car);
+            syncPartner(car);
+          }
+        }),
+        document
+          .getElementById("clear-library-btn")
+          .addEventListener("click", (e) => {
+            e.stopPropagation();
+            if (confirm("Clear all saved presets from your library?")) {
+              library = [];
+              updateLibrary();
+            }
+          }),
+        sizeSelect.addEventListener("change", (e) => {
+          const a = carSelect.value;
+          if (!a || !carColors[a]) return;
+          const t = parseInt(e.target.value);
+          !isNaN(t) && t >= 1 && t <= 9
+            ? ((carColors[a].size = t),
+              modifiedVehicles.add(a),
+              showColors(a),
+              syncPartner(a))
+            : "" !== e.target.value &&
+              toastManager.show("Invalid size selected!", "error");
+        }),
+        syncBtn.addEventListener("click", () => {
+          ((isSyncEnabled = !isSyncEnabled),
+            syncBtn.classList.toggle("active", isSyncEnabled),
+            isSyncEnabled && syncPartner(carSelect.value));
+        }),
+        maxSizeBtn.addEventListener("click", () => {
+          if (
+            confirm(
+              "Do you want to set palette size to 9 for all vehicles? This will update all vehicles and refresh the current view if a vehicle is selected.",
+            )
+          ) {
+            const e = Object.keys(carColors).length;
+            Object.keys(carColors).forEach((e) => {
+              ((carColors[e].size = 9), modifiedVehicles.add(e));
+            });
+            const a = carSelect.value;
+            a && carColors[a] && showColors(a);
+          }
+        }),
+        saveBtn.addEventListener("click", () => {
+          if (saveBtn.disabled) return;
+          ((saveBtn.disabled = !0),
+            saveBtn.classList.add("saving"),
+            (saveBtn.innerHTML =
+              '<i class="fas fa-spinner fa-spin"></i> Saving...'));
+          let e = originalText;
+          if (!e)
+            return (
+              toastManager.show("Error: No file content to save!", "error"),
+              saveBtn.classList.remove("saving"),
+              void (saveBtn.disabled = !1)
+            );
+          try {
+            console.time("SaveProcess");
+            for (const a of modifiedVehicles) {
+              if (!carColors[a]) continue;
+              const t = escapeRegex(a);
+              for (const o of carColors[a].colors) {
+                const r = o.originalIndex || o.index,
+                  s = new RegExp(
+                    `/Vehicles/ColorPalettes/${t}/${r}:[\\s\\S]*?(?=(/Vehicles/ColorPalettes/|$))`,
+                    "i",
+                  ),
+                  i = e.match(s);
+                if (!i)
+                  return (
+                    toastManager.show(
+                      `Error: Could not find color block for ${a}/${r}!`,
+                      "error",
+                    ),
+                    saveBtn.classList.remove("saving"),
+                    (saveBtn.disabled = !1),
+                    void console.timeEnd("SaveProcess")
+                  );
+                let l = i[0];
+                const n = [
+                  {
+                    key: "Paint Color_r",
+                    value: o.paint[0],
+                    original: o.originalValues.paint_r,
+                    originalLine: o.originalLines.paint_r,
+                  },
+                  {
+                    key: "Paint Color_g",
+                    value: o.paint[1],
+                    original: o.originalValues.paint_g,
+                    originalLine: o.originalLines.paint_g,
+                  },
+                  {
+                    key: "Paint Color_b",
+                    value: o.paint[2],
+                    original: o.originalValues.paint_b,
+                    originalLine: o.originalLines.paint_b,
+                  },
+                  {
+                    key: "Lacquer Color_r",
+                    value: o.lacquer[0],
+                    original: o.originalValues.lacquer_r,
+                    originalLine: o.originalLines.lacquer_r,
+                  },
+                  {
+                    key: "Lacquer Color_g",
+                    value: o.lacquer[1],
+                    original: o.originalValues.lacquer_g,
+                    originalLine: o.originalLines.lacquer_g,
+                  },
+                  {
+                    key: "Lacquer Color_b",
+                    value: o.lacquer[2],
+                    original: o.originalValues.lacquer_b,
+                    originalLine: o.originalLines.lacquer_b,
+                  },
+                  {
+                    key: "Flake Color_r",
+                    value: o.flake[0],
+                    original: o.originalValues.flake_r,
+                    originalLine: o.originalLines.flake_r,
+                  },
+                  {
+                    key: "Flake Color_g",
+                    value: o.flake[1],
+                    original: o.originalValues.flake_g,
+                    originalLine: o.originalLines.flake_g,
+                  },
+                  {
+                    key: "Flake Color_b",
+                    value: o.flake[2],
+                    original: o.originalValues.flake_b,
+                    originalLine: o.originalLines.flake_b,
+                  },
+                ];
+                for (const {
+                  key: e,
+                  value: a,
+                  original: t,
+                  originalLine: o,
+                } of n) {
+                  const r = t.includes(".") ? t.split(".")[1].length : 0,
+                    s = r > 0 ? a.toFixed(r) : a.toString(),
+                    i = new RegExp(
+                      `'${e}'\\s*=\\s*[\\d.]+\\s*\\([^)]+\\)`,
+                      "i",
+                    ),
+                    n = o.replace(t, s);
+                  l = l.replace(i, n);
+                }
+                e = e.replace(i[0], l);
+              }
+              const o = new RegExp(
+                  `(/Vehicles/ColorPalettes/${t}:\\s*(?:\\r?\\n\\s*)*?)(?:\\r?\\n\\s*Size\\s*=\\s*\\d+\\s*\\(1, 9\\);)?(\\r?\\n|$)`,
+                  "i",
+                ),
+                r = e.match(o),
+                s = `\n\tSize = ${carColors[a].size} (1, 9);`;
+              if (r) e = e.replace(r[0], `${r[1]}${s}${r[2] || ""}`);
+              else {
+                const o = new RegExp(
+                    `/Vehicles/ColorPalettes/${t}/\\d+:[\\s\\S]*?(?=(/Vehicles/ColorPalettes/|$))`,
+                    "i",
+                  ),
+                  r = e.match(o);
+                r
+                  ? (e = e.replace(
+                      r[0],
+                      `/Vehicles/ColorPalettes/${a}:${s}\n${r[0]}`,
+                    ))
+                  : ((e += `\n\n/Vehicles/ColorPalettes/${a}:${s}\n`),
+                    toastManager.show(
+                      `Warning: Appended header for ${a}`,
+                      "warning",
+                    ));
+              }
+            }
+            e = e.replace(/\r\n/g, "\n").replace(/\n/g, "\r\n");
+            const a = new Blob([e], { type: "text/plain;charset=utf-8" }),
+              t = URL.createObjectURL(a),
+              o = document.createElement("a");
+            ((o.href = t),
+              (o.download = "VehicleColors.params"),
+              o.click(),
+              URL.revokeObjectURL(t),
+              modifiedVehicles.clear(),
+              console.timeEnd("SaveProcess"),
+              toastManager.show("File saved successfully!", "success"));
+          } catch (e) {
+            (console.error("Error saving file:", e),
+              toastManager.show(`Error saving file: ${e.message}`, "error"));
+          } finally {
+            setTimeout(() => {
+              (saveBtn.classList.remove("saving"),
+                (saveBtn.disabled = !1),
+                (saveBtn.innerHTML =
+                  '<i class="fas fa-save"></i> Save Changes'));
+            }, 1e3);
+          }
+        }),
+        themeToggle.addEventListener("click", () => {
+          const e = !document.body.classList.contains("dark");
+          (setTheme(e), localStorage.setItem("theme", e ? "dark" : "light"));
+        }),
+        document
+          .getElementById("checkUpdateBtn")
+          .addEventListener("click", () => {
+            checkForUpdates();
+          }),
+        guideBtn.addEventListener("click", () =>
+          showPopup(guidePopup, !guidePopup.classList.contains("active")),
+        ),
+        vehiclesBtn.addEventListener("click", () =>
+          showPopup(vehiclesPopup, !vehiclesPopup.classList.contains("active")),
+        ),
+        libraryBtn.addEventListener("click", () => {
+          renderLibrary();
+          showPopup(libraryPopup, !libraryPopup.classList.contains("active"));
+        }),
+        document.addEventListener("click", (e) => {
+          guideBtn.contains(e.target) ||
+            vehiclesBtn.contains(e.target) ||
+            libraryBtn.contains(e.target) ||
+            (document.getElementById("checkUpdateBtn") &&
+              document.getElementById("checkUpdateBtn").contains(e.target)) ||
+            guidePopup.contains(e.target) ||
+            vehiclesPopup.contains(e.target) ||
+            libraryPopup.contains(e.target) ||
+            (updatePopup && updatePopup.contains(e.target)) ||
+            (showPopup(guidePopup, !1),
+            showPopup(vehiclesPopup, !1),
+            showPopup(libraryPopup, !1),
+            updatePopup &&
+              updatePopup.classList.contains("active") &&
+              hideUpdatePopup());
+        }));
+      colorsContainer.addEventListener("pointerdown", (e) => {
+        const a = e.target.closest(".color-trigger");
+        if (!a) return;
+        e.preventDefault();
+        const t = a.closest(".color-row"),
+          o = t.querySelector(".color-native-input");
+        if (!o) return;
+        openProColorPicker(o, e.clientX, e.clientY);
+      });
+      colorsContainer.addEventListener("keydown", (e) => {
+        if (!e.target.matches(".color-trigger")) return;
+        if ("Enter" !== e.key && " " !== e.key) return;
+        e.preventDefault();
+        const a = e.target.getBoundingClientRect(),
+          t = e.target.closest(".color-row"),
+          o = t.querySelector(".color-native-input");
+        if (!o) return;
+        openProColorPicker(o, a.right, a.top);
+      });
+      document.addEventListener("pointerdown", (e) => {
+        proColorPickerState.isOpen &&
+          proColorPicker &&
+          !proColorPicker.root.contains(e.target) &&
+          !e.target.closest(".color-trigger") &&
+          closeProColorPicker(!0);
+      });
+      document.addEventListener("keydown", (e) => {
+        "Escape" === e.key &&
+          proColorPickerState.isOpen &&
+          closeProColorPicker(!1);
+      });
+      window.addEventListener("resize", () => closeProColorPicker(!0));
+      const resetAllBtn = document.querySelector(".reset-all-btn");
+      resetAllBtn &&
+        (resetAllBtn.onclick = () => {
+          const e = carSelect.value;
+          e &&
+            carColors[e] &&
+            (carColors[e].colors.forEach((e) => {
+              ["paint", "lacquer", "flake"].forEach((a) => {
+                e[a] = [...e.originalColors[a]];
+              });
+            }),
+            modifiedVehicles.add(e),
+            showColors(e),
+            syncPartner(e));
+        });
+    </script>
+  </body>
+</html>

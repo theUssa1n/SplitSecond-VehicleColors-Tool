@@ -1,0 +1,101 @@
+
+— July 01, 2026
+--------------------------------------------------------------------------------
+| * Update Checker: Added automatic update checker button with notification 
+|   badge when new version is available! When an update is available,
+|   the app fetches the server link defined in the code. If the update is confirmed,
+|   the user is redirected to the MediaFire download page.
+
+— June 03, 2026
+--------------------------------------------------------------------------------
+| * Smart Randomizer: Advanced logic to generate harmonious color palettes 
+|   (Analogous, Complementary, or Neutral schemes).
+| * Toast Update: Redesigned notification system (Top-Right) with 
+|   minimalist UI and reduced frequency—only critical alerts and errors.
+
+— May 23, 2026
+--------------------------------------------------------------------------------
+| * Improved Usage Guide: Reorganized the documentation with a professional 
+|   layout, icons, and detailed instructions for new features.
+| * Compact Action Toolbar: Resized the bottom toolbar for a better fit while 
+|   keeping text legible. Now floats closer to the bottom.
+| * Color Library: Save your favorite color combinations to a persistent library.
+| * Full Vehicle Copy/Paste: Transfer all palettes from one car to another in 
+|   one click.
+| * Offline Mode: Fully localized all external assets (Font Awesome & Google Fonts).
+| * Resources Folder: Created structured repository for CSS and webfonts.
+| * Performance: Faster loading without external dependencies.
+
+— March 29, 2026
+--------------------------------------------------------------------------------
+| * Full Slot Copy/Paste: Added Copy Slot + Paste Replace to transfer complete
+|   Paint/Lacquer/Flake entries across vehicles.
+| * Advanced Color Picker: Replaced default flow with a new-style picker
+|   (SV square, Hue bar, RGB/HEX inputs, New/Current preview).
+| * Draggable Picker Panel: Picker window now supports move/drag via title bar
+|   for better placement while editing.
+
+— October 24, 2025
+--------------------------------------------------------------------------------
+| * Toast System: Smart stack-based notifications with priority queue 
+|   (errors first).
+| * Smart Timing & Limits: Auto-dismiss (2.5s–6s), max 3 visible toasts, no overlap.
+| * Flexible Positioning: Support for bottom-center (default), top-center, top-right.
+| * Full Migration: Replaced old toast logic with `ToastManager` class — cleaner, 
+|   faster, and fully theme-aware.
+| * Enhanced UX: All feedback (save, sync, reset, errors) now uses rich toasts with 
+|   contextual icons and improved accessibility.
+
+— October 21, 2025
+--------------------------------------------------------------------------------
+| * Sync Feature: Mirror colors, size, and order between paired DLC vehicles 
+|   (e.g., Musclecar_17 ↔ Placeholder_09). Fixes in-game rendering bug in 
+|   Discord/DC patches.
+| * Updated Guide: Added sync instructions, refined DLC color tips.
+| * Bug Fix: Palette size/order now correctly syncs for Placeholder models.
+
+- October 7, 2025
+--------------------------------------------------------------------------------
+| * Streamlined UI: Condensed guides/lists for faster load and less clutter.
+| * Performance Boost: Lighter fonts (Inter/Montserrat), colors, and animations 
+|   for smooth operation on any device.
+| * Smart Extras: Console tips for local server use, vehicle-specific reset toasts.
+
+- September 2025
+--------------------------------------------------------------------------------
+| * Flexible Palettes: Dropdown to set 1-9 palettes per vehicle, updates file.
+| * Palette Swapping: Use up/down arrow icons to reorder color palettes, prioritizing 
+|   your favorite sets for quick in-game access.
+| * Drag-and-Drop: Drop files to upload instantly, speeding up your workflow.
+| * Searchable Vehicles: Filterable main/DLC vehicle list for quick reference.
+| * Better Previews: Blends Paint & Flake for truer in-game color representation.
+
+— August 2025
+--------------------------------------------------------------------------------
+| * Toast Notifications: Instant feedback for saves, resets, and errors.
+| * Reset All Colors: One-click revert to original file values.
+| * Scroll-to-Top, Theme Persistence, Keyboard Navigation.
+| * Polished Animations: Fade-ins, slide-ins, hover effects.
+
+— July 2025
+--------------------------------------------------------------------------------
+| * Guide Popup: Click-outside to close, clearer color tips.
+| * Reliable Palette Handling: Accurate size detection and display.
+
+— June 2025
+--------------------------------------------------------------------------------
+| * In-App Guide: Tips for solid colors and reflections.
+| * Auto Palette Size Detection.
+| * Modern UI: Poppins font, blur backdrop, gradient headers.
+
+— May 2025
+--------------------------------------------------------------------------------
+| * Smart Save: Preserves filename, fixes .txt → .params.
+| * Realistic Previews: Paint + Flake blending.
+| * Mobile-Optimized Layout.
+
+(Initial Release) — April 24, 2025
+--------------------------------------------------------------------------------
+| * Core Editing: Upload, select car, edit RGB layers, live preview, save.
+| * Theme Toggle: Light/dark with emoji switch.
+| * Basic Error Alerts.
