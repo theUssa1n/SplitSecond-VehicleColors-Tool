@@ -345,7 +345,7 @@ function reorderColors(e, a, t) {
 function deepCopyEntry(e) {
   return {
     index: e.index,
-    originalIndex: e.index,
+    originalIndex: e.originalIndex ?? e.index,
     paint: [...e.paint],
     lacquer: [...e.lacquer],
     flake: [...e.flake],
@@ -1269,8 +1269,10 @@ function showPopup(e, a) {
         const t = escapeRegex(a);
         for (const o of carColors[a].colors) {
           const r = o.originalIndex || o.index,
+            l = parseInt(r, 10),
+            n = Number.isFinite(l) ? `0*${l}` : escapeRegex(r),
             s = new RegExp(
-              `/Vehicles/ColorPalettes/${t}/${r}:[\\s\\S]*?(?=(/Vehicles/ColorPalettes/|$))`,
+              `/Vehicles/ColorPalettes/${t}/${n}:[\\s\\S]*?(?=(/Vehicles/ColorPalettes/|$))`,
               "i",
             ),
             i = e.match(s);
@@ -1284,8 +1286,8 @@ function showPopup(e, a) {
               (saveBtn.disabled = !1),
               void console.timeEnd("SaveProcess")
             );
-          let l = i[0];
-          const n = [
+          let c = i[0];
+          const d = [
             {
               key: "Paint Color_r",
               value: o.paint[0],
@@ -1341,14 +1343,14 @@ function showPopup(e, a) {
               originalLine: o.originalLines.flake_b,
             },
           ];
-          for (const { key: e, value: a, original: t, originalLine: o } of n) {
+          for (const { key: e, value: a, original: t, originalLine: o } of d) {
             const r = t.includes(".") ? t.split(".")[1].length : 0,
               s = r > 0 ? a.toFixed(r) : a.toString(),
               i = new RegExp(`'${e}'\\s*=\\s*[\\d.]+\\s*\\([^)]+\\)`, "i"),
-              n = o.replace(t, s);
-            l = l.replace(i, n);
+              l = o.replace(t, s);
+            c = c.replace(i, l);
           }
-          e = e.replace(i[0], l);
+          e = e.replace(i[0], c);
         }
         const o = new RegExp(
             `(/Vehicles/ColorPalettes/${t}:\\s*(?:\\r?\\n\\s*)*?)(?:\\r?\\n\\s*Size\\s*=\\s*\\d+\\s*\\(1, 9\\);)?(\\r?\\n|$)`,
