@@ -1,4 +1,10 @@
 
+— August 16, 2026
+--------------------------------------------------------------------------------
+| * Bug Fix: Smart Randomizer changes now correctly apply to the saved
+|   `VehicleColors.params` output. Fixed slot index matching (leading-zero
+|   tolerance) and preserved original slot indices during copy/sync operations.
+
 — July 01, 2026
 --------------------------------------------------------------------------------
 | * Update Checker: Added automatic update checker button with notification 
