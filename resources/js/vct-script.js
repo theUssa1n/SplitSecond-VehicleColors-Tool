@@ -1,4 +1,4 @@
-const CURRENT_VERSION = "1.1.1"; // current version
+const CURRENT_VERSION = "1.1.2"; // current version
 const UPDATE_JSON_URL =
   "https://raw.githubusercontent.com/theUssa1n/SplitSecond-VehicleColors-Tool/main/version.json"; // update info from GitHub
 let currentUpdateData = null;
@@ -253,6 +253,12 @@ let carColors = {},
   originalText = "",
   isSyncEnabled = !1,
   modifiedVehicles = new Set(),
+  // Per-vehicle originals taken from the file at load time. Keyed by
+  // numeric slot index so Reset/Save stay correct even after reorder,
+  // sync or copy/paste moves entries between slots/vehicles.
+  fileOriginals = {},
+  fileOriginalSize = {},
+  parseSkipped = 0,
   paletteClipboard = null,
   vehicleClipboard = null,
   library = JSON.parse(localStorage.getItem("colorLibrary") || "[]"),
@@ -508,7 +514,7 @@ function createProColorPicker() {
         ((proColorPickerState.h = s),
           (proColorPickerState.s = i),
           (proColorPickerState.v = l),
-          renderProColorPicker(!0, !1));
+          renderProColorPicker(!0, !0));
       });
     }),
     a.hexInput.addEventListener("input", () => {
@@ -521,7 +527,7 @@ function createProColorPicker() {
       ((proColorPickerState.h = i),
         (proColorPickerState.s = l),
         (proColorPickerState.v = n),
-        renderProColorPicker(!0, !1));
+        renderProColorPicker(!0, !0));
     }),
     a
   );
@@ -580,7 +586,7 @@ function updateProPickerFromPointer(e, a, t) {
       o = clamp((t - e.top) / e.height, 0, 1);
     proColorPickerState.h = 360 * o;
   }
-  renderProColorPicker(!0, !1);
+  renderProColorPicker(!0, !0);
 }
 function stopProPickerDrag() {
   (document.removeEventListener("pointermove", handleProPickerPointerMove),
@@ -766,6 +772,7 @@ function generateSmartPalette() {
     sPaint = sFlake + 0.1;
     vPaint = vFlake - 0.1;
     sLacquer = 0.1;
+    vLacquer = Math.min(1, vFlake + 0.15);
   }
 
   const clamp = (val) => Math.min(1, Math.max(0, val));
@@ -785,7 +792,23 @@ function generateSmartPalette() {
 
 function applySmartRandomToSlot(car, index, container) {
   if (!carColors[car] || index >= carColors[car].colors.length) return;
-  const palette = generateSmartPalette();
+  // Never write non-finite values into the model (they would serialize
+  // as "NaN" into the saved file). Retry a few times, then bail out.
+  let palette;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    palette = generateSmartPalette();
+    const finite = [palette.paint, palette.lacquer, palette.flake].every((c) =>
+      c.every((v) => Number.isFinite(v)),
+    );
+    if (finite) break;
+  }
+  const bad = [palette.paint, palette.lacquer, palette.flake].some((c) =>
+    c.some((v) => !Number.isFinite(v)),
+  );
+  if (bad) {
+    toastManager.show("Randomizer produced an invalid color.", "error");
+    return;
+  }
   const slot = carColors[car].colors[index];
 
   slot.paint = palette.paint;
@@ -835,6 +858,9 @@ function parseFile(e) {
     throw new Error(
       "Invalid file format: Missing /Vehicles/ColorPalettes/ section.",
     );
+  fileOriginals = {};
+  fileOriginalSize = {};
+  parseSkipped = 0;
   const a = [
       ...e.matchAll(
         /\/Vehicles\/ColorPalettes\/([\w]+)\/(\d+):([\s\S]*?)(?=(\/Vehicles\/ColorPalettes\/|$))/gi,
@@ -853,7 +879,12 @@ function parseFile(e) {
   for (const [, e, s, l] of a) {
     (r++, t[e] || (t[e] = { size: i[e] || 9, colors: [] }));
     const a = (e) =>
-        l.match(new RegExp(`('${e}'\\s*=\\s*([\\d.]+)\\s*\\([^)]+\\))`, "i")),
+        l.match(
+          new RegExp(
+            `('${e}'[ \\t]*=[ \\t]*(-?[\\d.]+)[ \\t]*(?:\\([^)]*\\))?[ \\t]*;?)`,
+            "i",
+          ),
+        ),
       n = ["Paint Color_r", "Paint Color_g", "Paint Color_b"].map(a),
       c = ["Lacquer Color_r", "Lacquer Color_g", "Lacquer Color_b"].map(a),
       d = ["Flake Color_r", "Flake Color_g", "Flake Color_b"].map(a);
@@ -896,13 +927,24 @@ function parseFile(e) {
       },
     };
     [...u.paint, ...u.lacquer, ...u.flake].some(
-      (e) => isNaN(e) || e < 0 || e > 1,
+      (e) => isNaN(e) || e < -1 || e > 1,
     )
-      ? (console.warn(`Invalid RGB values for ${e}/${s}: Must be 0-1.`), o++)
-      : t[e].colors.push(u);
+      ? (console.warn(`Invalid RGB values for ${e}/${s}: Must be -1 to 1.`),
+        o++)
+      : (t[e].colors.push(u),
+        ((fileOriginals[e] || (fileOriginals[e] = {}))[parseInt(s, 10)] = {
+          colors: u.originalColors,
+          values: u.originalValues,
+          lines: u.originalLines,
+        }),
+        fileOriginalSize[e] === undefined && (fileOriginalSize[e] = i[e] || 9));
   }
   if (0 === r) throw new Error("No vehicle color palettes found.");
-  return (o > 0 && console.warn(`Skipped ${o} invalid entries.`), t);
+  return (
+    o > 0 && console.warn(`Skipped ${o} invalid entries.`),
+    (parseSkipped = o),
+    t
+  );
 }
 function handleFileSelect(e) {
   if (!e) return void toastManager.show("No file selected!", "error");
@@ -937,7 +979,12 @@ function handleFileSelect(e) {
           (syncBtn.disabled = !0),
           (maxSizeBtn.disabled = !0),
           (saveBtn.disabled = !0),
-          toastManager.show("File loaded successfully!", "success"));
+          toastManager.show("File loaded successfully!", "success"),
+          parseSkipped > 0 &&
+            toastManager.show(
+              `${parseSkipped} color entries were skipped (invalid/missing data). Check the console for details.`,
+              "warning",
+            ));
       } catch (e) {
         ((colorsContainer.innerHTML = `<div class="error">Error parsing file: ${e.message}</div>`),
           (carSelect.innerHTML = '<option value="">Select a car</option>'),
@@ -1055,9 +1102,11 @@ function showPopup(e, a) {
     },
     { passive: !0 },
   ),
-  fileInput.addEventListener("change", (e) =>
-    handleFileSelect(e.target.files[0]),
-  ),
+  fileInput.addEventListener("change", (e) => {
+    handleFileSelect(e.target.files[0]);
+    // Clear the input so re-selecting the SAME file fires "change" again.
+    e.target.value = "";
+  }),
   fileInputWrapper.addEventListener("dragover", (e) => {
     (e.preventDefault(), fileInputWrapper.classList.add("dragover"));
   }),
@@ -1156,7 +1205,13 @@ function showPopup(e, a) {
       const s = carColors[r].colors[t],
         i = a.closest(".color-set"),
         l = i.querySelector(`input.color-native-input[data-type="${o}"]`),
-        n = s.originalColors[o];
+        f = (fileOriginals[r] || {})[parseInt(s.index, 10)],
+        n = f && f.colors[o];
+      if (!n)
+        return void toastManager.show(
+          "No original color on record for this slot.",
+          "error",
+        );
       ((l.value = rgbToHex(...n)),
         setSlotColorUI(i, o, l.value),
         (s[o] = [...n]),
@@ -1287,66 +1342,73 @@ function showPopup(e, a) {
               void console.timeEnd("SaveProcess")
             );
           let c = i[0];
+          // Formatting template comes from THIS vehicle's own file
+          // originals for the slot being written (stable across sync,
+          // paste and reorder).
+          const _o = (fileOriginals[a] || {})[l] || o;
           const d = [
             {
               key: "Paint Color_r",
               value: o.paint[0],
-              original: o.originalValues.paint_r,
-              originalLine: o.originalLines.paint_r,
+              original: _o.values.paint_r,
+              originalLine: _o.lines.paint_r,
             },
             {
               key: "Paint Color_g",
               value: o.paint[1],
-              original: o.originalValues.paint_g,
-              originalLine: o.originalLines.paint_g,
+              original: _o.values.paint_g,
+              originalLine: _o.lines.paint_g,
             },
             {
               key: "Paint Color_b",
               value: o.paint[2],
-              original: o.originalValues.paint_b,
-              originalLine: o.originalLines.paint_b,
+              original: _o.values.paint_b,
+              originalLine: _o.lines.paint_b,
             },
             {
               key: "Lacquer Color_r",
               value: o.lacquer[0],
-              original: o.originalValues.lacquer_r,
-              originalLine: o.originalLines.lacquer_r,
+              original: _o.values.lacquer_r,
+              originalLine: _o.lines.lacquer_r,
             },
             {
               key: "Lacquer Color_g",
               value: o.lacquer[1],
-              original: o.originalValues.lacquer_g,
-              originalLine: o.originalLines.lacquer_g,
+              original: _o.values.lacquer_g,
+              originalLine: _o.lines.lacquer_g,
             },
             {
               key: "Lacquer Color_b",
               value: o.lacquer[2],
-              original: o.originalValues.lacquer_b,
-              originalLine: o.originalLines.lacquer_b,
+              original: _o.values.lacquer_b,
+              originalLine: _o.lines.lacquer_b,
             },
             {
               key: "Flake Color_r",
               value: o.flake[0],
-              original: o.originalValues.flake_r,
-              originalLine: o.originalLines.flake_r,
+              original: _o.values.flake_r,
+              originalLine: _o.lines.flake_r,
             },
             {
               key: "Flake Color_g",
               value: o.flake[1],
-              original: o.originalValues.flake_g,
-              originalLine: o.originalLines.flake_g,
+              original: _o.values.flake_g,
+              originalLine: _o.lines.flake_g,
             },
             {
               key: "Flake Color_b",
               value: o.flake[2],
-              original: o.originalValues.flake_b,
-              originalLine: o.originalLines.flake_b,
+              original: _o.values.flake_b,
+              originalLine: _o.lines.flake_b,
             },
           ];
           for (const { key: e, value: a, original: t, originalLine: o } of d) {
             const r = t.includes(".") ? t.split(".")[1].length : 0,
               s = r > 0 ? a.toFixed(r) : a.toString(),
-              i = new RegExp(`'${e}'\\s*=\\s*[\\d.]+\\s*\\([^)]+\\)`, "i"),
+              i = new RegExp(
+                `'${e}'[ \\t]*=[ \\t]*-?[\\d.]+(?:[ \\t]*\\([^)]*\\))?[ \\t]*;?`,
+                "i",
+              ),
               l = o.replace(t, s);
             c = c.replace(i, l);
           }
@@ -1469,11 +1531,15 @@ resetAllBtn &&
     const e = carSelect.value;
     e &&
       carColors[e] &&
-      (carColors[e].colors.forEach((e) => {
-        ["paint", "lacquer", "flake"].forEach((a) => {
-          e[a] = [...e.originalColors[a]];
-        });
+      (carColors[e].colors.forEach((s) => {
+        const f = (fileOriginals[e] || {})[parseInt(s.index, 10)];
+        f &&
+          ["paint", "lacquer", "flake"].forEach((t) => {
+            s[t] = [...f.colors[t]];
+          });
       }),
+      fileOriginalSize[e] !== undefined &&
+        (carColors[e].size = fileOriginalSize[e]),
       modifiedVehicles.add(e),
       showColors(e),
       syncPartner(e));
