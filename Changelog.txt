@@ -1,3 +1,14 @@
+— November 23, 2026
+--------------------------------------------------------------------------------
+| * Bug Fix: Vehicles with more than 9 palettes (e.g. Musclecar_09 with 16)
+|   are no longer cut off at 9. If the file has no `Size` line, the size now
+|   defaults to the vehicle's real palette count.
+| * Palette Size menu is now built per vehicle (1 up to its real palette count).
+| * Max Size button sets each vehicle to its own palette count instead of 9.
+| * Save: a `Size` line is only written if the file already had one or you
+|   changed the size, and its range is written as (1, N) with the real N.
+| * Version bumped to 1.1.3.
+
 — September 7, 2026
 --------------------------------------------------------------------------------
 | * Bug Fix: Fixed lacquer element not being applied during randomizing

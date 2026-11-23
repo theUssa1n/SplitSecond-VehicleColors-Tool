@@ -1,4 +1,4 @@
-const CURRENT_VERSION = "1.1.2"; // current version
+const CURRENT_VERSION = "1.1.3"; // current version
 const UPDATE_JSON_URL =
   "https://raw.githubusercontent.com/theUssa1n/SplitSecond-VehicleColors-Tool/main/version.json"; // update info from GitHub
 let currentUpdateData = null;
@@ -219,6 +219,10 @@ class ToastManager {
   }
 }
 const toastManager = new ToastManager();
+// Number of palette slots a vehicle actually has in the loaded file.
+function getMaxSlots(car) {
+  return carColors && carColors[car] ? carColors[car].colors.length : 0;
+}
 function escapeRegex(e) {
   return e.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
@@ -875,9 +879,9 @@ function parseFile(e) {
       ),
     ],
     i = {};
-  for (const [, e, a] of s) i[e] = a ? parseInt(a) : 9;
+  for (const [, e, a] of s) a && (i[e] = parseInt(a));
   for (const [, e, s, l] of a) {
-    (r++, t[e] || (t[e] = { size: i[e] || 9, colors: [] }));
+    (r++, t[e] || (t[e] = { size: i[e] || 0, hasSizeLine: i[e] !== undefined, colors: [] }));
     const a = (e) =>
         l.match(
           new RegExp(
@@ -937,9 +941,14 @@ function parseFile(e) {
           values: u.originalValues,
           lines: u.originalLines,
         }),
-        fileOriginalSize[e] === undefined && (fileOriginalSize[e] = i[e] || 9));
+        void 0);
   }
   if (0 === r) throw new Error("No vehicle color palettes found.");
+  // No "Size" line in the file -> size = real number of palettes of that vehicle.
+  for (const k of Object.keys(t)) {
+    if (!t[k].hasSizeLine || !t[k].size) t[k].size = t[k].colors.length || 9;
+    fileOriginalSize[k] = t[k].size;
+  }
   return (
     o > 0 && console.warn(`Skipped ${o} invalid entries.`),
     (parseSkipped = o),
@@ -1007,7 +1016,11 @@ function showColors(e) {
     !e || !carColors[e])
   )
     return void (sizeSelect.value = "");
-  const a = carColors[e]?.size || 9;
+  const a = carColors[e]?.size || getMaxSlots(e) || 9;
+  const maxN = Math.max(getMaxSlots(e), a);
+  sizeSelect.innerHTML =
+    '<option value="">Palette size</option>' +
+    Array.from({ length: maxN }, (_, i) => `<option value="${i + 1}">${i + 1}</option>`).join("");
   sizeSelect.value = a;
   const t = carColors[e].colors
     .sort((e, a) => parseInt(e.index) - parseInt(a.index))
@@ -1278,7 +1291,7 @@ function showPopup(e, a) {
     const a = carSelect.value;
     if (!a || !carColors[a]) return;
     const t = parseInt(e.target.value);
-    !isNaN(t) && t >= 1 && t <= 9
+    !isNaN(t) && t >= 1 && t <= Math.max(getMaxSlots(a), carColors[a].size)
       ? ((carColors[a].size = t),
         modifiedVehicles.add(a),
         showColors(a),
@@ -1294,12 +1307,12 @@ function showPopup(e, a) {
   maxSizeBtn.addEventListener("click", () => {
     if (
       confirm(
-        "Do you want to set palette size to 9 for all vehicles? This will update all vehicles and refresh the current view if a vehicle is selected.",
+        "Do you want to set palette size to the maximum (all available palettes) for all vehicles? This will update all vehicles and refresh the current view if a vehicle is selected.",
       )
     ) {
       const e = Object.keys(carColors).length;
       Object.keys(carColors).forEach((e) => {
-        ((carColors[e].size = 9), modifiedVehicles.add(e));
+        ((carColors[e].size = getMaxSlots(e) || carColors[e].size), modifiedVehicles.add(e));
       });
       const a = carSelect.value;
       a && carColors[a] && showColors(a);
@@ -1414,12 +1427,18 @@ function showPopup(e, a) {
           }
           e = e.replace(i[0], c);
         }
+        // Only write a Size line if the file already had one, or the user changed it.
+        if (
+          !carColors[a].hasSizeLine &&
+          carColors[a].size === fileOriginalSize[a]
+        )
+          continue;
         const o = new RegExp(
-            `(/Vehicles/ColorPalettes/${t}:\\s*(?:\\r?\\n\\s*)*?)(?:\\r?\\n\\s*Size\\s*=\\s*\\d+\\s*\\(1, 9\\);)?(\\r?\\n|$)`,
+            `(/Vehicles/ColorPalettes/${t}:\\s*(?:\\r?\\n\\s*)*?)(?:\\r?\\n\\s*Size\\s*=\\s*\\d+\\s*\\(\\s*\\d+\\s*,\\s*\\d+\\s*\\)\\s*;)?(\\r?\\n|$)`,
             "i",
           ),
           r = e.match(o),
-          s = `\n\tSize = ${carColors[a].size} (1, 9);`;
+          s = `\n\tSize = ${carColors[a].size} (1, ${Math.max(getMaxSlots(a), carColors[a].size)});`;
         if (r) e = e.replace(r[0], `${r[1]}${s}${r[2] || ""}`);
         else {
           const o = new RegExp(
