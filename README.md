@@ -15,6 +15,9 @@ A modern, offline-first tool for customizing `VehicleColors.params` file for the
 - **Update Checker**: Automatic version checking
 - **Light/Dark Theme**: Glassmorphism UI with theme toggle
 - **Drag-and-Drop**: Quick file upload
+- **Add Slot**: Append brand-new color palettes beyond the stock count (e.g. 9)
+- **Remove Palette**: Delete any palette entirely (removed from the saved file)
+- **5-Column Grid**: Center-aligned, denser palette grid
 
 ## Usage
 

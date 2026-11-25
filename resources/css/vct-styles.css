@@ -151,7 +151,7 @@ body.dark::before {
   background-image: var(--grid-pattern-dark);
 }
 .container {
-  max-width: min(90vw, 800px);
+  max-width: min(96vw, 1100px);
   width: 100%;
   display: flex;
   flex-direction: column;
@@ -240,9 +240,10 @@ body.dark::before {
 }
 .main-content {
   display: grid;
-  max-width: min(90vw, 600px);
+  max-width: min(96vw, 1000px);
   gap: 0.8rem;
   margin: 0 auto;
+  width: 100%;
 }
 .input-section {
   grid-template-columns: 1fr 1fr;
@@ -449,18 +450,24 @@ select:disabled {
   }
 }
 .colors-grid {
-  display: grid;
+  display: flex;
+  flex-wrap: wrap;
   justify-content: center;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 0.7rem;
-  max-width: 600px;
+  align-items: stretch;
+  gap: 0.6rem;
+  max-width: 1000px;
+  margin: 0 auto;
+  width: 100%;
 }
 .color-set {
   background: var(--card-bg);
   border: 1px solid var(--card-border);
   border-radius: 8px;
   padding: 1rem;
+  width: 180px;
   max-width: 180px;
+  flex: 0 0 180px;
+  box-sizing: border-box;
 }
 .color-set:hover {
   transform: translateY(-4px);
@@ -1094,14 +1101,19 @@ select:disabled {
   transform: translateY(-2px);
 }
 #copy-vehicle-btn,
-#paste-vehicle-btn {
+#paste-vehicle-btn,
+#add-slot-btn {
   background: var(--primary);
   color: white;
 }
 #copy-vehicle-btn:hover:not(:disabled),
-#paste-vehicle-btn:hover:not(:disabled) {
+#paste-vehicle-btn:hover:not(:disabled),
+#add-slot-btn:hover:not(:disabled) {
   filter: brightness(1.1);
   transform: translateY(-2px);
+}
+#add-slot-btn {
+  background: var(--success);
 }
 .reset-all-btn {
   background: rgba(107, 114, 128, 0.15);
@@ -1263,4 +1275,57 @@ select:disabled {
   width: 100%;
   font-size: 0.82rem;
   padding: 0.45rem;
+}
+.vct-confirm {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+}
+.vct-confirm-box {
+  background: var(--card-bg);
+  color: var(--text);
+  border: 1px solid var(--card-border);
+  border-radius: 12px;
+  padding: 1.25rem 1.5rem;
+  max-width: 420px;
+  width: 90%;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
+}
+.vct-confirm-msg {
+  margin: 0 0 1rem;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+.vct-confirm-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+.vct-confirm-actions button {
+  padding: 0.45rem 1rem;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.vct-confirm-no {
+  background: rgba(107, 114, 128, 0.15);
+  color: var(--text);
+}
+.vct-confirm-no:hover {
+  background: rgba(107, 114, 128, 0.25);
+}
+.vct-confirm-yes {
+  background: var(--error);
+  color: white;
+}
+.vct-confirm-yes:hover {
+  filter: brightness(1.1);
 }

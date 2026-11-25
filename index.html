@@ -72,15 +72,6 @@
             <div class="size-sync-wrapper">
               <select id="size-select" disabled="disabled">
                 <option value="">Palette size</option>
-                <option value="1">1</option>
-                <option value="2">2</option>
-                <option value="3">3</option>
-                <option value="4">4</option>
-                <option value="5">5</option>
-                <option value="6">6</option>
-                <option value="7">7</option>
-                <option value="8">8</option>
-                <option value="9">9</option>
               </select>
               <button
                 id="sync-btn"
@@ -128,6 +119,13 @@
             title="Paste palettes to this car"
           >
             <i class="fas fa-paste"></i> Paste
+          </button>
+          <button
+            id="add-slot-btn"
+            disabled="disabled"
+            title="Add a new color palette slot to this vehicle (beyond the original count, e.g. 9)"
+          >
+            <i class="fas fa-plus"></i> Add Slot
           </button>
           <button
             id="save-btn"
@@ -283,6 +281,24 @@
               schemes based on color theory (Complementary, Analogous, etc.) to
               ensure a professional look.
             </li>
+            <li style="margin-bottom: 0.8rem">
+              <strong style="color: #f59e0b">★ Add Slot:</strong> The
+              <strong>Add Slot</strong> button appends a brand-new color palette
+              to the selected vehicle — beyond its original count (e.g. 9).
+              New slots are saved as full color blocks and can be edited, copied
+              and randomized like any other slot.
+            </li>
+            <li style="margin-bottom: 0.8rem">
+              <strong style="color: #f59e0b">★ Remove Palette:</strong> Click the
+              trash <i class="fas fa-trash"></i> icon in a slot's corner to
+              delete that palette entirely. Original slots are removed from the
+              saved file; the <strong>Reset</strong> button restores the vehicle
+              to its exact loaded state.
+            </li>
+            <li style="margin-bottom: 0.8rem">
+              <strong style="color: #f59e0b">★ 5-Column Grid:</strong> Color
+              palettes are now displayed five per row for a denser overview.
+            </li>
           </ul>
         </div>
 
@@ -294,7 +310,8 @@
             <li style="margin-bottom: 0.6rem">
               <strong>• Palette Size:</strong> Change the number of available
               color slots per vehicle (1 up to the vehicle's real palette count,
-              e.g. 9 for most cars).
+              e.g. 9 for most cars). The box is inactive until you select a
+              vehicle.
             </li>
             <li style="margin-bottom: 0.6rem">
               <strong>• Batch Max Size:</strong> Click

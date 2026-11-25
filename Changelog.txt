@@ -1,3 +1,22 @@
+— November 25, 2026
+--------------------------------------------------------------------------------
+| * Add Slot: New "Add Slot" button appends brand-new color palettes beyond
+|   the selected vehicle's original count (e.g. 9). New slots are saved as
+|   full color blocks and behave like any other slot (edit/copy/randomize).
+| * Remove Palette: Each palette now has a delete (trash) button. Deleting a
+|   palette removes it entirely, including from the saved output file. The
+|   Reset button restores the vehicle to its exact loaded state.
+| * Grid Layout: Color palettes are now shown five per row, center-aligned.
+| * Bug Fix: Reset now fully restores the loaded file state, including the
+|   palette size value (no longer keeps the post-add count).
+| * Bug Fix: Confirmation dialogs now work inside sandboxed iframes (native
+|   window.confirm was silently blocked; replaced with an in-app dialog).
+| * UX: The Palette Size box is now empty and disabled by default, and only
+|   activates after loading a valid file and selecting a vehicle.
+| * Bug Fix: Saving no longer aborts for the whole file when one vehicle is
+|   problematic; only that vehicle is skipped, with a warning notification.
+| * Version bumped to 1.2.0.
+
 — November 23, 2026
 --------------------------------------------------------------------------------
 | * Bug Fix: Vehicles with more than 9 palettes (e.g. Musclecar_09 with 16)

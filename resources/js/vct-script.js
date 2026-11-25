@@ -1,4 +1,4 @@
-const CURRENT_VERSION = "1.1.3"; // current version
+const CURRENT_VERSION = "1.2.0"; // current version
 const UPDATE_JSON_URL =
   "https://raw.githubusercontent.com/theUssa1n/SplitSecond-VehicleColors-Tool/main/version.json"; // update info from GitHub
 let currentUpdateData = null;
@@ -247,11 +247,13 @@ const fileInput = document.getElementById("file-upload"),
   libraryList = document.getElementById("library-list"),
   copyVehicleBtn = document.getElementById("copy-vehicle-btn"),
   pasteVehicleBtn = document.getElementById("paste-vehicle-btn"),
+  addSlotBtn = document.getElementById("add-slot-btn"),
   randomAllBtn = document.getElementById("random-all-btn"),
   prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches,
   savedTheme = localStorage.getItem("theme"),
   isDark = "dark" === savedTheme || (!savedTheme && prefersDark);
 setTheme(isDark);
+sizeSelect.value = ""; // palette size starts empty and locked until a car is chosen
 const backdrop = document.querySelector(".backdrop");
 let carColors = {},
   originalText = "",
@@ -262,6 +264,9 @@ let carColors = {},
   // sync or copy/paste moves entries between slots/vehicles.
   fileOriginals = {},
   fileOriginalSize = {},
+  // Tracks palette slots deleted during this session (numeric original index)
+  // so Save can remove the matching block from the file.
+  removedBlocks = {},
   parseSkipped = 0,
   paletteClipboard = null,
   vehicleClipboard = null,
@@ -359,13 +364,14 @@ function deepCopyEntry(e) {
     paint: [...e.paint],
     lacquer: [...e.lacquer],
     flake: [...e.flake],
+    isNew: !!e.isNew,
     originalColors: {
       paint: [...e.originalColors.paint],
       lacquer: [...e.originalColors.lacquer],
       flake: [...e.originalColors.flake],
     },
-    originalLines: { ...e.originalLines },
-    originalValues: { ...e.originalValues },
+    originalLines: e.originalLines ? { ...e.originalLines } : {},
+    originalValues: e.originalValues ? { ...e.originalValues } : {},
   };
 }
 function copyPaletteValues(e) {
@@ -794,6 +800,126 @@ function generateSmartPalette() {
   return { paint, lacquer, flake };
 }
 
+// Format a 0-1 float the same way the game file expects (e.g. 1, 0.5, 0.333333).
+function formatFloatValue(v) {
+  return v.toFixed(6).replace(/0+$/, "").replace(/\.$/, "");
+}
+
+// Build a full palette block text for a newly added slot, mirroring the exact
+// structure of existing blocks in the file (descriptor lines + Swatch type).
+function buildNewBlock(car, entry) {
+  const num = parseInt(String(entry.originalIndex ?? entry.index), 10);
+  const idx = String(num).padStart(2, "0");
+  const layerMap = { Paint: "paint", Lacquer: "lacquer", Flake: "flake" };
+  // Channel ranges copied from the real file: only Flake Green uses -1..1.
+  const ranges = {
+    Paint: { r: "(0.0, 1.0)", g: "(0.0, 1.0)", b: "(0.0, 1.0)" },
+    Lacquer: { r: "(0.0, 1.0)", g: "(0.0, 1.0)", b: "(0.0, 1.0)" },
+    Flake: { r: "(0.0, 1.0)", g: "(-1.0, 1.0)", b: "(0.0, 1.0)" },
+  };
+  const lines = [
+    `\t'@Flake Color' = ':Flake Color:color:\\'Flake Color_r\\' \\'Flake Color_g\\' \\'Flake Color_b\\' ';`,
+    `\t'@Lacquer Color' = ':Lacquer Color:color:\\'Lacquer Color_r\\' \\'Lacquer Color_g\\' \\'Lacquer Color_b\\' ';`,
+    `\t'@Paint Color' = ':Paint Color:color:\\'Paint Color_r\\' \\'Paint Color_g\\' \\'Paint Color_b\\' ';`,
+  ];
+  for (const layer of ["Flake", "Lacquer", "Paint"]) {
+    const c = entry[layerMap[layer]];
+    lines.push(
+      `\t'${layer} Color_b' = ${formatFloatValue(c[2])} ${ranges[layer].b};`,
+    );
+    lines.push(
+      `\t'${layer} Color_g' = ${formatFloatValue(c[1])} ${ranges[layer].g};`,
+    );
+    lines.push(
+      `\t'${layer} Color_r' = ${formatFloatValue(c[0])} ${ranges[layer].r};`,
+    );
+  }
+  lines.push(`\t'Swatch type' = Paint;`);
+  return `\n/Vehicles/ColorPalettes/${car}/${idx}:\n${lines.join("\n")}\n`;
+}
+
+// Append a brand-new palette slot to a vehicle, beyond its original count.
+function addPaletteSlot(car) {
+  if (!carColors[car]) return;
+  const colors = carColors[car].colors;
+  let maxNum = -1;
+  for (const c of colors) {
+    const n = parseInt(String(c.originalIndex ?? c.index), 10);
+    if (!isNaN(n) && n > maxNum) maxNum = n;
+  }
+  const nextNum = maxNum + 1;
+  const white = [1, 1, 1];
+  const entry = {
+    originalIndex: String(nextNum),
+    index: String(nextNum).padStart(2, "0"),
+    paint: [...white],
+    lacquer: [...white],
+    flake: [...white],
+    isNew: true,
+    originalColors: {
+      paint: [...white],
+      lacquer: [...white],
+      flake: [...white],
+    },
+    originalLines: {},
+    originalValues: {},
+  };
+  colors.push(entry);
+  carColors[car].size = Math.max(carColors[car].size, nextNum + 1);
+  modifiedVehicles.add(car);
+  showColors(car);
+  syncPartner(car);
+  toastManager.show(`Added palette slot ${entry.index} to ${car}`, "success");
+}
+
+// Rebuild the model entry for an original (file) slot from its recorded values.
+function entryFromOriginal(car, num) {
+  const f = (fileOriginals[car] || {})[num];
+  if (!f) return null;
+  const indexStr = String(num).padStart(2, "0");
+  return {
+    originalIndex: String(num),
+    index: indexStr,
+    paint: [...f.colors.paint],
+    lacquer: [...f.colors.lacquer],
+    flake: [...f.colors.flake],
+    isNew: false,
+    originalColors: {
+      paint: [...f.colors.paint],
+      lacquer: [...f.colors.lacquer],
+      flake: [...f.colors.flake],
+    },
+    originalLines: { ...f.lines },
+    originalValues: { ...f.values },
+  };
+}
+
+// Remove a palette slot entirely. For original slots the matching block is
+// recorded so Save deletes it from the file; new slots are just dropped.
+function removePaletteSlot(car, index) {
+  if (!carColors[car]) return;
+  const colors = carColors[car].colors;
+  if (index < 0 || index >= colors.length) return;
+  if (colors.length <= 1) {
+    toastManager.show("Cannot remove the last palette.", "warning");
+    return;
+  }
+  const entry = colors[index];
+  const num = parseInt(String(entry.originalIndex ?? entry.index), 10);
+  if (!entry.isNew && !isNaN(num)) {
+    (removedBlocks[car] ??= new Set()).add(num);
+  }
+  colors.splice(index, 1);
+  carColors[car].size = Math.max(
+    1,
+    Math.min(carColors[car].size, colors.length),
+  );
+  modifiedVehicles.add(car);
+  showColors(car);
+  syncPartner(car);
+  toastManager.show(`Removed palette from ${car}`, "success");
+}
+
 function applySmartRandomToSlot(car, index, container) {
   if (!carColors[car] || index >= carColors[car].colors.length) return;
   // Never write non-finite values into the model (they would serialize
@@ -864,6 +990,7 @@ function parseFile(e) {
     );
   fileOriginals = {};
   fileOriginalSize = {};
+  removedBlocks = {};
   parseSkipped = 0;
   const a = [
       ...e.matchAll(
@@ -881,7 +1008,13 @@ function parseFile(e) {
     i = {};
   for (const [, e, a] of s) a && (i[e] = parseInt(a));
   for (const [, e, s, l] of a) {
-    (r++, t[e] || (t[e] = { size: i[e] || 0, hasSizeLine: i[e] !== undefined, colors: [] }));
+    (r++,
+      t[e] ||
+        (t[e] = {
+          size: i[e] || 0,
+          hasSizeLine: i[e] !== undefined,
+          colors: [],
+        }));
     const a = (e) =>
         l.match(
           new RegExp(
@@ -976,6 +1109,7 @@ function handleFileSelect(e) {
             (sizeSelect.disabled = !0),
             (syncBtn.disabled = !0),
             (maxSizeBtn.disabled = !0),
+            (addSlotBtn.disabled = !0),
             (saveBtn.disabled = !0),
             void toastManager.show("No valid vehicles found!", "error")
           );
@@ -987,6 +1121,7 @@ function handleFileSelect(e) {
           (sizeSelect.disabled = !0),
           (syncBtn.disabled = !0),
           (maxSizeBtn.disabled = !0),
+          (addSlotBtn.disabled = !0),
           (saveBtn.disabled = !0),
           toastManager.show("File loaded successfully!", "success"),
           parseSkipped > 0 &&
@@ -1001,6 +1136,7 @@ function handleFileSelect(e) {
           (sizeSelect.disabled = !0),
           (syncBtn.disabled = !0),
           (maxSizeBtn.disabled = !0),
+          (addSlotBtn.disabled = !0),
           (saveBtn.disabled = !0),
           toastManager.show(`Error: ${e.message}`, "error"));
       }
@@ -1020,7 +1156,10 @@ function showColors(e) {
   const maxN = Math.max(getMaxSlots(e), a);
   sizeSelect.innerHTML =
     '<option value="">Palette size</option>' +
-    Array.from({ length: maxN }, (_, i) => `<option value="${i + 1}">${i + 1}</option>`).join("");
+    Array.from(
+      { length: maxN },
+      (_, i) => `<option value="${i + 1}">${i + 1}</option>`,
+    ).join("");
   sizeSelect.value = a;
   const t = carColors[e].colors
     .sort((e, a) => parseInt(e.index) - parseInt(a.index))
@@ -1045,7 +1184,7 @@ function showColors(e) {
         paletteClipboard ? "" : "disabled"
       } aria-label="Paste full palette into ${
         e.index
-      }">\n          <i class="fas fa-paste"></i> Paste\n        </button>\n      </div>\n      <div class="slot-actions" style="margin-top: -0.3rem;">\n        <button class="slot-action-btn save-library-btn" data-index="${a}" aria-label="Save to Library">\n          <i class="fas fa-plus"></i> Library\n        </button>\n      </div>\n      <div class="color-row">\n        <button type="button" class="color-trigger" data-index="${a}" data-type="paint" style="background:${t}" aria-label="Paint color ${
+      }">\n          <i class="fas fa-paste"></i> Paste\n        </button>\n      </div>\n      <div class="slot-actions" style="margin-top: -0.3rem;">\n        <button class="slot-action-btn save-library-btn" data-index="${a}" aria-label="Save to Library">\n          <i class="fas fa-plus"></i> Library\n        </button>\n        <button class="slot-action-btn delete-slot-btn" data-index="${a}" aria-label="Delete this color palette" style="background: var(--error); color: white;">\n          <i class="fas fa-trash"></i> Delete\n        </button>\n      </div>\n      <div class="color-row">\n        <button type="button" class="color-trigger" data-index="${a}" data-type="paint" style="background:${t}" aria-label="Paint color ${
         e.index
       }"></button>\n        <input type="color" class="color-native-input" data-index="${a}" data-type="paint" value="${t}" tabindex="-1" aria-hidden="true">\n        <span>Paint</span>\n        <button class="reset-btn" data-index="${a}" data-type="paint" aria-label="Reset paint color"><i class="fas fa-undo-alt"></i></button>\n      </div>\n      <div class="color-row">\n        <button type="button" class="color-trigger" data-index="${a}" data-type="lacquer" style="background:${o}" aria-label="Lacquer color ${
         e.index
@@ -1103,6 +1242,34 @@ function setTheme(e) {
 function showPopup(e, a) {
   (e.classList.toggle("active", a), backdrop.classList.toggle("active", a));
 }
+// Non-native confirmation dialog (works even where window.confirm is blocked,
+// e.g. inside a sandboxed preview). Calls onYes() when the user confirms.
+function confirmDialog(message, onYes) {
+  const overlay = document.createElement("div");
+  overlay.className = "vct-confirm";
+  overlay.setAttribute("role", "alertdialog");
+  overlay.setAttribute("aria-modal", "true");
+  overlay.innerHTML = `
+    <div class="vct-confirm-box">
+      <p class="vct-confirm-msg"></p>
+      <div class="vct-confirm-actions">
+        <button type="button" class="vct-confirm-no">Cancel</button>
+        <button type="button" class="vct-confirm-yes">OK</button>
+      </div>
+    </div>`;
+  overlay.querySelector(".vct-confirm-msg").textContent = message;
+  document.body.appendChild(overlay);
+  const close = () => overlay.remove();
+  overlay.querySelector(".vct-confirm-no").addEventListener("click", close);
+  overlay.querySelector(".vct-confirm-yes").addEventListener("click", () => {
+    close();
+    onYes && onYes();
+  });
+  overlay.addEventListener("click", (e) => {
+    if (e.target === overlay) close();
+  });
+  overlay.querySelector(".vct-confirm-yes").focus();
+}
 ((scrollBtn.innerHTML = '<i class="fas fa-chevron-up"></i>'),
   (scrollBtn.className = "scroll-top-btn"),
   (scrollBtn.title = "Back to top"),
@@ -1150,6 +1317,15 @@ function showPopup(e, a) {
       const car = carSelect.value;
       const container = randomSlotBtn.closest(".color-set");
       applySmartRandomToSlot(car, index, container);
+      return;
+    }
+    const deleteSlotBtn = e.target.closest(".delete-slot-btn");
+    if (deleteSlotBtn) {
+      const index = parseInt(deleteSlotBtn.dataset.index);
+      const car = carSelect.value;
+      confirmDialog(`Delete this color palette from ${car}?`, () => {
+        removePaletteSlot(car, index);
+      });
       return;
     }
     const a = e.target.closest(".copy-slot-btn");
@@ -1239,6 +1415,7 @@ function showPopup(e, a) {
       (syncBtn.disabled = !a || !vehiclePairs[a]),
       (copyVehicleBtn.disabled = !a || !carColors[a]),
       (randomAllBtn.disabled = !a || !carColors[a]),
+      (addSlotBtn.disabled = !a || !carColors[a]),
       (pasteVehicleBtn.disabled = !a || !carColors[a] || !vehicleClipboard),
       (maxSizeBtn.disabled = !carColors || 0 === Object.keys(carColors).length),
       vehiclePairs[a] ||
@@ -1247,12 +1424,12 @@ function showPopup(e, a) {
   randomAllBtn.addEventListener("click", () => {
     const car = carSelect.value;
     if (!car || !carColors[car]) return;
-    if (confirm(`Randomize all colors for ${car}?`)) {
+    confirmDialog(`Randomize all colors for ${car}?`, () => {
       const sets = colorsContainer.querySelectorAll(".color-set");
       sets.forEach((set, i) => {
         applySmartRandomToSlot(car, i, set);
       });
-    }
+    });
   }),
   copyVehicleBtn.addEventListener("click", () => {
     const car = carSelect.value;
@@ -1263,29 +1440,33 @@ function showPopup(e, a) {
     };
     pasteVehicleBtn.disabled = false;
   }),
+  addSlotBtn.addEventListener("click", () => {
+    const car = carSelect.value;
+    if (!car || !carColors[car]) return;
+    addPaletteSlot(car);
+  }),
   pasteVehicleBtn.addEventListener("click", () => {
     const car = carSelect.value;
     if (!car || !carColors[car] || !vehicleClipboard) return;
-    if (
-      confirm(
-        `Paste all palettes into ${car}? This will overwrite current colors.`,
-      )
-    ) {
-      carColors[car].size = vehicleClipboard.size;
-      carColors[car].colors = vehicleClipboard.colors.map(deepCopyEntry);
-      modifiedVehicles.add(car);
-      showColors(car);
-      syncPartner(car);
-    }
+    confirmDialog(
+      `Paste all palettes into ${car}? This will overwrite current colors.`,
+      () => {
+        carColors[car].size = vehicleClipboard.size;
+        carColors[car].colors = vehicleClipboard.colors.map(deepCopyEntry);
+        modifiedVehicles.add(car);
+        showColors(car);
+        syncPartner(car);
+      },
+    );
   }),
   document
     .getElementById("clear-library-btn")
     .addEventListener("click", (e) => {
       e.stopPropagation();
-      if (confirm("Clear all saved presets from your library?")) {
+      confirmDialog("Clear all saved presets from your library?", () => {
         library = [];
         updateLibrary();
-      }
+      });
     }),
   sizeSelect.addEventListener("change", (e) => {
     const a = carSelect.value;
@@ -1305,18 +1486,17 @@ function showPopup(e, a) {
       isSyncEnabled && syncPartner(carSelect.value));
   }),
   maxSizeBtn.addEventListener("click", () => {
-    if (
-      confirm(
-        "Do you want to set palette size to the maximum (all available palettes) for all vehicles? This will update all vehicles and refresh the current view if a vehicle is selected.",
-      )
-    ) {
-      const e = Object.keys(carColors).length;
-      Object.keys(carColors).forEach((e) => {
-        ((carColors[e].size = getMaxSlots(e) || carColors[e].size), modifiedVehicles.add(e));
-      });
-      const a = carSelect.value;
-      a && carColors[a] && showColors(a);
-    }
+    confirmDialog(
+      "Do you want to set palette size to the maximum (all available palettes) for all vehicles? This will update all vehicles and refresh the current view if a vehicle is selected.",
+      () => {
+        Object.keys(carColors).forEach((e) => {
+          ((carColors[e].size = getMaxSlots(e) || carColors[e].size),
+            modifiedVehicles.add(e));
+        });
+        const a = carSelect.value;
+        a && carColors[a] && showColors(a);
+      },
+    );
   }),
   saveBtn.addEventListener("click", () => {
     if (saveBtn.disabled) return;
@@ -1332,10 +1512,19 @@ function showPopup(e, a) {
       );
     try {
       console.time("SaveProcess");
+      let skippedSaves = 0;
       for (const a of modifiedVehicles) {
         if (!carColors[a]) continue;
         const t = escapeRegex(a);
+        const newBlocks = [];
+        let badBlock = false;
         for (const o of carColors[a].colors) {
+          // Newly-added slots have no block in the original text yet; collect
+          // them and insert fresh blocks after the vehicle's existing ones.
+          if (o.isNew || !o.originalLines) {
+            newBlocks.push(o);
+            continue;
+          }
           const r = o.originalIndex || o.index,
             l = parseInt(r, 10),
             n = Number.isFinite(l) ? `0*${l}` : escapeRegex(r),
@@ -1344,16 +1533,14 @@ function showPopup(e, a) {
               "i",
             ),
             i = e.match(s);
-          if (!i)
-            return (
-              toastManager.show(
-                `Error: Could not find color block for ${a}/${r}!`,
-                "error",
-              ),
-              saveBtn.classList.remove("saving"),
-              (saveBtn.disabled = !1),
-              void console.timeEnd("SaveProcess")
-            );
+          if (!i) {
+            // Skip this single vehicle instead of aborting the whole save, so
+            // the other cars' edits (including size changes) still take place.
+            console.warn(`Skipping ${a}/${r}: color block not found`);
+            skippedSaves++;
+            badBlock = true;
+            break;
+          }
           let c = i[0];
           // Formatting template comes from THIS vehicle's own file
           // originals for the slot being written (stable across sync,
@@ -1427,6 +1614,34 @@ function showPopup(e, a) {
           }
           e = e.replace(i[0], c);
         }
+        if (badBlock) continue; // skip this vehicle entirely if a block was missing
+        // Remove blocks for palette slots the user deleted during this session.
+        const removedSet = removedBlocks[a];
+        if (removedSet && removedSet.size) {
+          for (const idxNum of [...removedSet]) {
+            const delRe = new RegExp(
+              `/Vehicles/ColorPalettes/${t}/0*${idxNum}:[\\s\\S]*?(?=(/Vehicles/ColorPalettes/|$))`,
+              "i",
+            );
+            e = e.replace(delRe, "");
+          }
+        }
+        // Insert blocks for newly-added palette slots right after the last
+        // existing block of this vehicle (i.e. before the next vehicle header).
+        if (newBlocks.length) {
+          const lastBlockRe = new RegExp(
+            `/Vehicles/ColorPalettes/${t}/\\d+:[\\s\\S]*?(?=(/Vehicles/ColorPalettes/|$))`,
+            "gi",
+          );
+          let m,
+            lastEnd = -1;
+          while ((m = lastBlockRe.exec(e))) lastEnd = m.index + m[0].length;
+          const insertText = newBlocks.map((o) => buildNewBlock(a, o)).join("");
+          e =
+            lastEnd >= 0
+              ? e.slice(0, lastEnd) + insertText + e.slice(lastEnd)
+              : e + "\n" + insertText;
+        }
         // Only write a Size line if the file already had one, or the user changed it.
         if (
           !carColors[a].hasSizeLine &&
@@ -1459,6 +1674,12 @@ function showPopup(e, a) {
         }
       }
       e = e.replace(/\r\n/g, "\n").replace(/\n/g, "\r\n");
+      if (skippedSaves > 0) {
+        toastManager.show(
+          `${skippedSaves} vehicle(s) skipped while saving (could not find a color block). See console for details.`,
+          "warning",
+        );
+      }
       const a = new Blob([e], { type: "text/plain;charset=utf-8" }),
         t = URL.createObjectURL(a),
         o = document.createElement("a");
@@ -1548,18 +1769,22 @@ const resetAllBtn = document.querySelector(".reset-all-btn");
 resetAllBtn &&
   (resetAllBtn.onclick = () => {
     const e = carSelect.value;
-    e &&
-      carColors[e] &&
-      (carColors[e].colors.forEach((s) => {
-        const f = (fileOriginals[e] || {})[parseInt(s.index, 10)];
-        f &&
-          ["paint", "lacquer", "flake"].forEach((t) => {
-            s[t] = [...f.colors[t]];
-          });
-      }),
-      fileOriginalSize[e] !== undefined &&
-        (carColors[e].size = fileOriginalSize[e]),
-      modifiedVehicles.add(e),
-      showColors(e),
-      syncPartner(e));
+    if (!e || !carColors[e]) return;
+    // Full revert to the loaded file state: drop all newly added slots,
+    // restore any deleted original slots from the file records, reset colors
+    // to their originals and restore the original palette size.
+    const nums = Object.keys(fileOriginals[e] || {})
+      .map(Number)
+      .sort((a, b) => a - b);
+    carColors[e].colors = nums
+      .map((n) => entryFromOriginal(e, n))
+      .filter(Boolean);
+    carColors[e].size =
+      fileOriginalSize[e] !== undefined
+        ? fileOriginalSize[e]
+        : carColors[e].colors.length;
+    if (removedBlocks[e]) removedBlocks[e].clear();
+    modifiedVehicles.delete(e);
+    showColors(e);
+    syncPartner(e);
   });
