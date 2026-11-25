@@ -1880,8 +1880,10 @@ resetAllBtn &&
   const importCarBtn = document.getElementById("import-car-btn");
   const importFileInput = document.getElementById("import-file-input");
   const importCarPopup = document.getElementById("import-car-popup");
-  const importCarSelect = document.getElementById("import-car-select");
-  const confirmImportBtn = document.getElementById("confirm-import-btn");
+  const importCarSearch = document.getElementById("import-car-search");
+  const importCarCount = document.getElementById("import-car-count");
+  const importCarGrid = document.getElementById("import-car-grid");
+  const importTargetCarBadge = document.getElementById("import-target-car-badge");
   let importedCars = {};
 
   function updateGalleryButtons() {
@@ -1892,6 +1894,100 @@ resetAllBtn &&
   }
   carSelect.addEventListener("change", updateGalleryButtons);
   updateGalleryButtons();
+
+  function triggerCarImport(srcName) {
+    if (!srcName || !importedCars[srcName]) return;
+    const car = carSelect.value;
+    if (!car || !carColors[car]) {
+      toastManager.show("Select a target car first!", "warning");
+      return;
+    }
+    const g = importedCars[srcName];
+    const item = {
+      kind: "gallery",
+      name: `${srcName} Gallery`,
+      size: g.size,
+      colors: g.colors.map(deepCopyEntry),
+    };
+    showPopup(importCarPopup, false);
+    replaceCarGallery(item);
+  }
+
+  function renderImportCars(filterQuery) {
+    if (!importCarGrid) return;
+    const q = (filterQuery || "").toLowerCase().trim();
+    const allNames = Object.keys(importedCars);
+    const filtered = q
+      ? allNames.filter((name) => name.toLowerCase().includes(q))
+      : allNames;
+
+    if (importCarCount) {
+      importCarCount.textContent = `${filtered.length} / ${allNames.length} cars`;
+    }
+
+    if (!filtered.length) {
+      importCarGrid.innerHTML = `
+        <div class="empty-import-view">
+          <i class="fas fa-search"></i>
+          <div>No vehicles match "<strong>${q}</strong>"</div>
+        </div>
+      `;
+      return;
+    }
+
+    importCarGrid.innerHTML = filtered
+      .map((name) => {
+        const g = importedCars[name];
+        const first = g.colors && g.colors[0];
+        const paint = first ? first.paint : [1, 1, 1];
+        const lacquer = first ? first.lacquer : [1, 1, 1];
+        const flake = first ? first.flake : [1, 1, 1];
+        const lacquerHex = rgbToHex(...lacquer);
+        const mixHex = rgbToHex(...mixColors(flake, paint));
+
+        const swatchDots = (g.colors || [])
+          .slice(0, 8)
+          .map((c) => {
+            const p = c.paint || [1, 1, 1];
+            return `<div class="import-swatch-dot" style="background:${rgbToHex(...p)}" title="Palette color"></div>`;
+          })
+          .join("");
+
+        return `
+          <div class="import-car-card" data-car="${name}">
+            <div class="import-card-header">
+              <span class="import-card-name" title="${name}">${name}</span>
+              <span class="import-card-badge">${g.size} / ${g.colors.length} slots</span>
+            </div>
+            <div class="import-card-preview">
+              <div style="background: ${lacquerHex}; width: 100%; height: 100%; position: absolute;"></div>
+              <div style="background: radial-gradient(circle, ${mixHex}, ${lacquerHex}); width: 100%; height: 100%; position: absolute;"></div>
+            </div>
+            <div class="import-card-swatches">
+              ${swatchDots}
+            </div>
+            <div class="import-card-actions">
+              <button class="import-card-btn" data-car="${name}">
+                <i class="fas fa-file-import"></i> Import Gallery
+              </button>
+            </div>
+          </div>
+        `;
+      })
+      .join("");
+
+    importCarGrid.querySelectorAll(".import-car-card").forEach((card) => {
+      card.addEventListener("click", () => {
+        triggerCarImport(card.dataset.car);
+      });
+    });
+  }
+
+  if (importCarSearch) {
+    importCarSearch.addEventListener("input", (e) => {
+      renderImportCars(e.target.value);
+    });
+  }
 
   if (saveGalleryBtn)
     saveGalleryBtn.addEventListener("click", () => {
@@ -1925,38 +2021,21 @@ resetAllBtn &&
             toastManager.show("No palettes found in that file", "error");
             return;
           }
-          importCarSelect.innerHTML = names
-            .map(
-              (n) =>
-                `<option value="${n}">${n} (${importedCars[n].size})</option>`,
-            )
-            .join("");
+          const currentCar = carSelect.value;
+          if (importTargetCarBadge) {
+            importTargetCarBadge.textContent = currentCar || "Current Vehicle";
+          }
+          if (importCarSearch) importCarSearch.value = "";
+          renderImportCars("");
           showPopup(importCarPopup, true);
+          setTimeout(() => {
+            if (importCarSearch) importCarSearch.focus();
+          }, 120);
         } catch (err) {
           toastManager.show("Failed to read that file: " + err.message, "error");
         }
       };
       fr.readAsText(file);
       e.target.value = "";
-    });
-
-  if (confirmImportBtn)
-    confirmImportBtn.addEventListener("click", () => {
-      const srcName = importCarSelect.value;
-      if (!srcName || !importedCars[srcName]) return;
-      const car = carSelect.value;
-      if (!car || !carColors[car]) {
-        toastManager.show("Select a target car first!", "warning");
-        return;
-      }
-      const g = importedCars[srcName];
-      const item = {
-        kind: "gallery",
-        name: `${srcName} Gallery`,
-        size: g.size,
-        colors: g.colors.map(deepCopyEntry),
-      };
-      showPopup(importCarPopup, false);
-      replaceCarGallery(item);
     });
 })();

@@ -531,31 +531,36 @@
         </div>
       </section>
 
-      <section class="library-popup custom-scrollbar" id="import-car-popup">
+      <section class="library-popup custom-scrollbar import-gallery-modal" id="import-car-popup">
         <button class="close-btn" aria-label="Close import car">
           <i class="fas fa-times"></i>
         </button>
-        <h3>Import Car Gallery</h3>
-        <p
-          style="
-            font-size: 0.85rem;
-            margin-bottom: 1rem;
-            color: var(--text-muted);
-          "
-        >
-          Choose a car from the selected file to import its whole color gallery
-          into the currently selected vehicle.
-        </p>
-        <select id="import-car-select" class="custom-scrollbar"></select>
-        <div style="margin-top: 1rem; text-align: right">
-          <button
-            id="confirm-import-btn"
-            class="library-item-btn"
-            style="color: white"
-          >
-            <i class="fas fa-check"></i> Import
-          </button>
+        <div class="import-popup-header">
+          <div class="import-popup-title-row">
+            <div class="import-header-icon">
+              <i class="fas fa-file-import"></i>
+            </div>
+            <div>
+              <h3>Import Car Gallery</h3>
+              <p class="import-popup-desc">
+                Choose a vehicle below to import its full gallery into
+                <span id="import-target-car-badge" class="target-car-badge">Target Car</span>
+              </p>
+            </div>
+          </div>
+          <div class="import-search-bar-wrap">
+            <i class="fas fa-search import-search-icon"></i>
+            <input
+              type="text"
+              id="import-car-search"
+              placeholder="Search vehicles by name (e.g. Musclecar, Supercar, Elite)..."
+              autocomplete="off"
+            />
+            <span id="import-car-count" class="import-count-tag">0 cars</span>
+          </div>
         </div>
+
+        <div id="import-car-grid" class="import-car-grid custom-scrollbar"></div>
       </section>
 
       <section class="update-popup">
