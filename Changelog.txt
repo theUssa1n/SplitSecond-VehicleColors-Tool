@@ -3,6 +3,12 @@
 | * Add Slot: New "Add Slot" button appends brand-new color palettes beyond
 |   the selected vehicle's original count (e.g. 9). New slots are saved as
 |   full color blocks and behave like any other slot (edit/copy/randomize).
+| * Save Gallery: The "Save Gallery" button stores the selected vehicle's
+|   entire color set (all palettes + size) in the Library as a reusable
+|   "car gallery" preset that can be applied to any other vehicle.
+| * Import Car Gallery: The "Import Car" button loads another VehicleColors.params
+|   file, lets you choose a car in it, and applies its whole color gallery to
+|   the currently selected vehicle.
 | * Remove Palette: Each palette now has a delete (trash) button. Deleting a
 |   palette removes it entirely, including from the saved output file. The
 |   Reset button restores the vehicle to its exact loaded state.

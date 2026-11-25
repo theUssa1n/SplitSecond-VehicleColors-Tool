@@ -19,6 +19,9 @@ A modern, offline-first tool for customizing `VehicleColors.params` file for the
 - **Drag-and-Drop**: Quick file upload
 - **Add Slot**: Append brand-new color palettes beyond the stock count (e.g. 9)
 - **Remove Palette**: Delete any palette entirely (removed from the saved file)
+- **Save/Import Vehicle Gallery**: Save a whole vehicle's color set to the
+  library and import a whole car's gallery from another `VehicleColors.params`
+  file
 
 ## Usage
 

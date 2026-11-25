@@ -687,17 +687,23 @@ function renderLibrary() {
   if (!libraryList) return;
   if (library.length === 0) {
     libraryList.innerHTML =
-      '<div class="empty-library">Your library is empty. Save a palette from a vehicle slot!</div>';
+      '<div class="empty-library">Your library is empty. Save a palette or a whole vehicle gallery!</div>';
     return;
   }
 
   libraryList.innerHTML = library
     .map((item, index) => {
-      const paintHex = rgbToHex(...item.paint);
-      const lacquerHex = rgbToHex(...item.lacquer);
-      const flakeHex = rgbToHex(...item.flake);
-      const previewMix = mixColors(item.flake, item.paint);
-      const mixHex = rgbToHex(...previewMix);
+      const isGallery = item.kind === "gallery";
+      const src = isGallery ? item.colors && item.colors[0] : item;
+      const paint = src ? src.paint : [1, 1, 1];
+      const lacquer = src ? src.lacquer : [1, 1, 1];
+      const flake = src ? src.flake : [1, 1, 1];
+      const paintHex = rgbToHex(...paint);
+      const lacquerHex = rgbToHex(...lacquer);
+      const mixHex = rgbToHex(...mixColors(flake, paint));
+      const badge = isGallery
+        ? `<div class="library-item-badge">Car gallery · ${item.size}</div>`
+        : "";
 
       return `
           <div class="library-item">
@@ -705,7 +711,7 @@ function renderLibrary() {
               <div style="background: ${lacquerHex}; width: 100%; height: 100%; position: absolute;"></div>
               <div style="background: radial-gradient(circle, ${mixHex}, ${lacquerHex}); width: 100%; height: 100%; position: absolute;"></div>
             </div>
-            <div class="library-item-name" title="${item.name}">${item.name}</div>
+            <div class="library-item-name" title="${item.name}">${item.name}${badge}</div>
             <div class="library-item-actions">
               <button class="library-item-btn apply-preset-btn" data-index="${index}" title="Apply to current selection">Apply</button>
               <button class="library-item-btn delete-preset-btn" data-index="${index}" title="Delete" style="background: var(--error); color: white;">×</button>
@@ -719,13 +725,19 @@ function renderLibrary() {
     btn.onclick = (e) => {
       e.stopPropagation();
       const index = parseInt(btn.dataset.index);
+      const item = library[index];
       const car = carSelect.value;
       if (!car) {
         toastManager.show("Select a car first!", "warning");
         return;
       }
+      if (item && item.kind === "gallery") {
+        showPopup(libraryPopup, false);
+        replaceCarGallery(item);
+        return;
+      }
       toastManager.show("Select a slot to apply", "info");
-      paletteClipboard = { ...library[index], sourceVehicle: "Library" };
+      paletteClipboard = { ...item, sourceVehicle: "Library" };
       showColors(car);
       showPopup(libraryPopup, false);
     };
@@ -739,6 +751,76 @@ function renderLibrary() {
       updateLibrary();
     };
   });
+}
+
+// Replace the currently selected vehicle's entire palette set with a gallery
+// item (from the library or an external file). Destructive -> confirm first.
+function replaceCarGallery(item) {
+  const car = carSelect.value;
+  if (!car || !carColors[car]) return;
+  confirmDialog(
+    `Replace all palettes of ${car} with this gallery? This will overwrite current colors and size.`,
+    () => {
+      carColors[car].size = item.size;
+      carColors[car].colors = item.colors.map(deepCopyEntry);
+      modifiedVehicles.add(car);
+      showColors(car);
+      syncPartner(car);
+      toastManager.show("Gallery applied", "success");
+    },
+  );
+}
+
+// Pure, read-only parser: extracts per-vehicle palettes from arbitrary params
+// text without touching the main session's global state (used for importing a
+// car gallery from another file).
+function extractCarsFromText(text) {
+  if (typeof text !== "string" || !text.includes("/Vehicles/ColorPalettes/"))
+    return {};
+  const out = {};
+  const slots = [
+    ...text.matchAll(
+      /\/Vehicles\/ColorPalettes\/([\w]+)\/(\d+):([\s\S]*?)(?=(\/Vehicles\/ColorPalettes\/|$))/gi,
+    ),
+  ];
+  const sizes = [
+    ...text.matchAll(
+      /\/Vehicles\/ColorPalettes\/([\w]+):\s*(?:Size\s*=\s*(\d+))?/gi,
+    ),
+  ];
+  const sizeMap = {};
+  for (const [, carName, sz] of sizes) if (sz) sizeMap[carName] = parseInt(sz);
+  for (const [, carName, slotIdx, body] of slots) {
+    if (!out[carName]) out[carName] = { size: sizeMap[carName] || 0, colors: [] };
+    const grab = (k) =>
+      body.match(
+        new RegExp(
+          `('${k}'[ \\t]*=[ \\t]*(-?[\\d.]+)[ \\t]*(?:\\([^)]*\\))?[ \\t]*;?)`,
+          "i",
+        ),
+      );
+    const n = ["Paint Color_r", "Paint Color_g", "Paint Color_b"].map(grab);
+    const c = ["Lacquer Color_r", "Lacquer Color_g", "Lacquer Color_b"].map(grab);
+    const d = ["Flake Color_r", "Flake Color_g", "Flake Color_b"].map(grab);
+    if ([...n, ...c, ...d].some((x) => !x)) continue;
+    out[carName].colors.push({
+      originalIndex: slotIdx,
+      index: slotIdx.padStart(2, "0"),
+      paint: n.map((x) => parseFloat(x[2])),
+      lacquer: c.map((x) => parseFloat(x[2])),
+      flake: d.map((x) => parseFloat(x[2])),
+      isNew: false,
+      originalColors: {
+        paint: n.map((x) => parseFloat(x[2])),
+        lacquer: c.map((x) => parseFloat(x[2])),
+        flake: d.map((x) => parseFloat(x[2])),
+      },
+      originalLines: {},
+      originalValues: {},
+    });
+  }
+  for (const k of Object.keys(out)) if (!out[k].size) out[k].size = out[k].colors.length || 9;
+  return out;
 }
 
 function generateSmartPalette() {
@@ -1788,3 +1870,93 @@ resetAllBtn &&
     showColors(e);
     syncPartner(e);
   });
+
+// ---------------------------------------------------------------------------
+// Car gallery: save a whole vehicle's palette set to the library, and import
+// a whole car's gallery from another VehicleColors.params file.
+// ---------------------------------------------------------------------------
+(function () {
+  const saveGalleryBtn = document.getElementById("save-gallery-btn");
+  const importCarBtn = document.getElementById("import-car-btn");
+  const importFileInput = document.getElementById("import-file-input");
+  const importCarPopup = document.getElementById("import-car-popup");
+  const importCarSelect = document.getElementById("import-car-select");
+  const confirmImportBtn = document.getElementById("confirm-import-btn");
+  let importedCars = {};
+
+  function updateGalleryButtons() {
+    const car = carSelect.value;
+    const hasCar = !!(car && carColors[car]);
+    if (saveGalleryBtn) saveGalleryBtn.disabled = !hasCar;
+    if (importCarBtn) importCarBtn.disabled = !hasCar;
+  }
+  carSelect.addEventListener("change", updateGalleryButtons);
+  updateGalleryButtons();
+
+  if (saveGalleryBtn)
+    saveGalleryBtn.addEventListener("click", () => {
+      const car = carSelect.value;
+      if (!car || !carColors[car]) return;
+      library.push({
+        kind: "gallery",
+        name: `${car} Gallery (${carColors[car].size})`,
+        size: carColors[car].size,
+        colors: carColors[car].colors.map(deepCopyEntry),
+      });
+      updateLibrary();
+      toastManager.show("Saved vehicle gallery to library", "success");
+    });
+
+  if (importCarBtn)
+    importCarBtn.addEventListener("click", () => {
+      if (importFileInput) importFileInput.click();
+    });
+
+  if (importFileInput)
+    importFileInput.addEventListener("change", (e) => {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+      const fr = new FileReader();
+      fr.onload = (ev) => {
+        try {
+          importedCars = extractCarsFromText(String(ev.target.result));
+          const names = Object.keys(importedCars);
+          if (!names.length) {
+            toastManager.show("No palettes found in that file", "error");
+            return;
+          }
+          importCarSelect.innerHTML = names
+            .map(
+              (n) =>
+                `<option value="${n}">${n} (${importedCars[n].size})</option>`,
+            )
+            .join("");
+          showPopup(importCarPopup, true);
+        } catch (err) {
+          toastManager.show("Failed to read that file: " + err.message, "error");
+        }
+      };
+      fr.readAsText(file);
+      e.target.value = "";
+    });
+
+  if (confirmImportBtn)
+    confirmImportBtn.addEventListener("click", () => {
+      const srcName = importCarSelect.value;
+      if (!srcName || !importedCars[srcName]) return;
+      const car = carSelect.value;
+      if (!car || !carColors[car]) {
+        toastManager.show("Select a target car first!", "warning");
+        return;
+      }
+      const g = importedCars[srcName];
+      const item = {
+        kind: "gallery",
+        name: `${srcName} Gallery`,
+        size: g.size,
+        colors: g.colors.map(deepCopyEntry),
+      };
+      showPopup(importCarPopup, false);
+      replaceCarGallery(item);
+    });
+})();
