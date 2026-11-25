@@ -6,7 +6,6 @@
 | * Remove Palette: Each palette now has a delete (trash) button. Deleting a
 |   palette removes it entirely, including from the saved output file. The
 |   Reset button restores the vehicle to its exact loaded state.
-| * Grid Layout: Color palettes are now shown five per row, center-aligned.
 | * Bug Fix: Reset now fully restores the loaded file state, including the
 |   palette size value (no longer keeps the post-add count).
 | * Bug Fix: Confirmation dialogs now work inside sandboxed iframes (native

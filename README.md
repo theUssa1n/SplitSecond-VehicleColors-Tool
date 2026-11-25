@@ -11,13 +11,14 @@ A modern, offline-first tool for customizing `VehicleColors.params` file for the
 - **Full Vehicle Copy/Paste**: Transfer all palettes between vehicles
 - **Slot Copy/Paste**: Transfer individual Paint/Lacquer/Flake entries
 - **Advanced Color Picker**: Modern picker with SV square, Hue bar, and RGB/HEX inputs
-- **Sync Feature**: Fix DLC vehicle color rendering bugs
+- **Sync Feature**: Fix DLC vehicle color rendering bugs. This only matters
+  for the original SSDC build — if your `VehicleColors.params` comes from the
+  SSDC v2 build, there is no need to activate Sync.
 - **Update Checker**: Automatic version checking
 - **Light/Dark Theme**: Glassmorphism UI with theme toggle
 - **Drag-and-Drop**: Quick file upload
 - **Add Slot**: Append brand-new color palettes beyond the stock count (e.g. 9)
 - **Remove Palette**: Delete any palette entirely (removed from the saved file)
-- **5-Column Grid**: Center-aligned, denser palette grid
 
 ## Usage
 
