@@ -1352,6 +1352,26 @@ select:disabled {
   box-sizing: border-box;
 }
 
+.import-gallery-modal .close-btn {
+  position: absolute;
+  top: 0.75rem;
+  left: 0.75rem;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--error);
+  color: #fff;
+  border-radius: 4px;
+  line-height: 1;
+}
+
+.import-gallery-modal .close-btn:hover {
+  background: #dc2626;
+}
+
 .import-popup-header {
   margin-bottom: 1rem;
   display: flex;
@@ -1364,6 +1384,7 @@ select:disabled {
   display: flex;
   align-items: center;
   gap: 0.85rem;
+  padding-left: 2rem;
 }
 
 .import-header-icon {

@@ -242,6 +242,7 @@ const fileInput = document.getElementById("file-upload"),
   guidePopup = document.querySelector(".guide-popup"),
   vehiclesPopup = document.querySelector(".vehicles-popup"),
   libraryPopup = document.querySelector(".library-popup"),
+  importCarPopup = document.getElementById("import-car-popup"),
   vehicleSearch = document.getElementById("vehicle-search"),
   vehicleList = document.getElementById("vehicle-list"),
   libraryList = document.getElementById("library-list"),
@@ -791,7 +792,8 @@ function extractCarsFromText(text) {
   const sizeMap = {};
   for (const [, carName, sz] of sizes) if (sz) sizeMap[carName] = parseInt(sz);
   for (const [, carName, slotIdx, body] of slots) {
-    if (!out[carName]) out[carName] = { size: sizeMap[carName] || 0, colors: [] };
+    if (!out[carName])
+      out[carName] = { size: sizeMap[carName] || 0, colors: [] };
     const grab = (k) =>
       body.match(
         new RegExp(
@@ -800,7 +802,9 @@ function extractCarsFromText(text) {
         ),
       );
     const n = ["Paint Color_r", "Paint Color_g", "Paint Color_b"].map(grab);
-    const c = ["Lacquer Color_r", "Lacquer Color_g", "Lacquer Color_b"].map(grab);
+    const c = ["Lacquer Color_r", "Lacquer Color_g", "Lacquer Color_b"].map(
+      grab,
+    );
     const d = ["Flake Color_r", "Flake Color_g", "Flake Color_b"].map(grab);
     if ([...n, ...c, ...d].some((x) => !x)) continue;
     out[carName].colors.push({
@@ -819,7 +823,8 @@ function extractCarsFromText(text) {
       originalValues: {},
     });
   }
-  for (const k of Object.keys(out)) if (!out[k].size) out[k].size = out[k].colors.length || 9;
+  for (const k of Object.keys(out))
+    if (!out[k].size) out[k].size = out[k].colors.length || 9;
   return out;
 }
 
@@ -1809,10 +1814,12 @@ function confirmDialog(message, onYes) {
       guidePopup.contains(e.target) ||
       vehiclesPopup.contains(e.target) ||
       libraryPopup.contains(e.target) ||
+      importCarPopup.contains(e.target) ||
       (updatePopup && updatePopup.contains(e.target)) ||
       (showPopup(guidePopup, !1),
       showPopup(vehiclesPopup, !1),
       showPopup(libraryPopup, !1),
+      showPopup(importCarPopup, !1),
       updatePopup &&
         updatePopup.classList.contains("active") &&
         hideUpdatePopup());
@@ -1883,7 +1890,9 @@ resetAllBtn &&
   const importCarSearch = document.getElementById("import-car-search");
   const importCarCount = document.getElementById("import-car-count");
   const importCarGrid = document.getElementById("import-car-grid");
-  const importTargetCarBadge = document.getElementById("import-target-car-badge");
+  const importTargetCarBadge = document.getElementById(
+    "import-target-car-badge",
+  );
   let importedCars = {};
 
   function updateGalleryButtons() {
@@ -2032,7 +2041,10 @@ resetAllBtn &&
             if (importCarSearch) importCarSearch.focus();
           }, 120);
         } catch (err) {
-          toastManager.show("Failed to read that file: " + err.message, "error");
+          toastManager.show(
+            "Failed to read that file: " + err.message,
+            "error",
+          );
         }
       };
       fr.readAsText(file);

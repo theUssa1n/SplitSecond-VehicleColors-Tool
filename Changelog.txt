@@ -20,6 +20,11 @@
 |   activates after loading a valid file and selecting a vehicle.
 | * Bug Fix: Saving no longer aborts for the whole file when one vehicle is
 |   problematic; only that vehicle is skipped, with a warning notification.
+| * Bug Fix: Clicking the backdrop now closes the Import Car Gallery popup
+|   together with the dimmed overlay (previously only the overlay closed
+|   while the popup stayed on screen).
+| * Bug Fix: The Import Car Gallery close button is now a proper square in
+|   the top-left corner instead of being stretched by the flex layout.
 | * Version bumped to 1.2.0.
 
 — November 23, 2026
