@@ -1,4 +1,4 @@
-— November 25, 2026
+— November 26, 2026
 --------------------------------------------------------------------------------
 | * Add Slot: New "Add Slot" button appends brand-new color palettes beyond
 |   the selected vehicle's original count (e.g. 9). New slots are saved as
@@ -25,7 +25,7 @@
 |   while the popup stayed on screen).
 | * Bug Fix: The Import Car Gallery close button is now a proper square in
 |   the top-left corner instead of being stretched by the flex layout.
-| * Version bumped to 1.2.0.
+| * Version bumped to 1.2.1.
 
 — November 23, 2026
 --------------------------------------------------------------------------------
