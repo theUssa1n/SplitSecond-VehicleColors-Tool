@@ -27,7 +27,7 @@
 |   the top-left corner instead of being stretched by the flex layout.
 | * Thanks to Tropixx-XLR (https://github.com/Tropixx-XLR) for helping evaluate
 |   and test this build.
-| * Version bumped to 1.2.0.
+| * Version bumped to 1.1.5.
 
 — November 23, 2026
 --------------------------------------------------------------------------------
