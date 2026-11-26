@@ -1,4 +1,4 @@
-const CURRENT_VERSION = "1.2.0"; // current version
+const CURRENT_VERSION = "1.1.5"; // current version
 const UPDATE_JSON_URL =
   "https://raw.githubusercontent.com/theUssa1n/SplitSecond-VehicleColors-Tool/main/version.json"; // update info from GitHub
 let currentUpdateData = null;
