@@ -25,7 +25,7 @@
 |   while the popup stayed on screen).
 | * Bug Fix: The Import Car Gallery close button is now a proper square in
 |   the top-left corner instead of being stretched by the flex layout.
-| * Version bumped to 1.2.1.
+| * Version bumped to 1.2.0.
 
 — November 23, 2026
 --------------------------------------------------------------------------------
